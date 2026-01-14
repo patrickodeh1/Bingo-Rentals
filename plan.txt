@@ -1,0 +1,1709 @@
+i want to build for a client who posted a contest and it seems the first person messed around i want to secure the client because my work is very good all past clients have been satisfied i believe this one will too
+
+the contest details:
+I need a clean, mobile-friendly site that lets customers book our portable storage pods or short-term garbage bins in just a few clicks. The flow is simple: choose the product, pick a drop-off date and location, pay the first month plus the transport fee, and get an automated confirmation. When they’re finished, they come back to schedule the pickup the same way. Core functions • Online booking and secure payments (Stripe or comparable gateway) • Calendar selector dedicated to scheduling drop-offs and pickups • Real-time price summary that adds the flat delivery / removal fee to the monthly rental • Guest checkout only—no user accounts or logins required • Email and SMS notifications for both drop-off and pickup events • Simple admin dashboard where I can adjust stock levels, pricing, blackout dates, and view orders at a glance Visuals & content are on hand (logo, photos, copy); I just need the site built, integrated, and handed over fully tested. If you’ve set up booking flows for equipment rental, self-storage, or similar services before, you’ll hit the ground running.
+
+
+my entry proposal:
+Portable Storage & Bin Rental Booking Site
+I'll deliver a streamlined, mobile-optimized booking platform that turns rentals into a 3-click process: select product → choose dates/location → pay and confirm. What I'll Build: Intuitive bookin g engine with calendar integration for drop-off/pickup scheduling Stripe payment gateway with real-time pricing (monthly rate + flat transport fee) Frictionless guest checkout—no login barriers Automated email/SMS confirmations for both delivery and collection Admin dashboard to manage inventory, pricing, blackout dates, and track orders Fully responsive design optimized for mobile bookings My Approach: I've built similar booking systems for equipment rental and logistics companies, so I understand the flow: fast conversions, transparent pricing, and zero friction. I'll integrate your existing visuals and copy, handle all payment/notification setup, and deliver a fully tested, deployment-ready site. Deliverables: ✓ Production-ready website with integrated payment processing ✓ Complete admin Less
+
+
+the image i used as entry is saved as image.png for reference
+
+# Portable Storage & Bin Rental Booking Platform
+## Complete Development Plan
+
+---
+
+## Project Overview
+
+**Objective**: Build a fully functional booking platform for portable storage pods and garbage bins with guest checkout, Stripe payments, automated notifications, and admin dashboard.
+
+**Tech Stack**:
+- Backend: Django 5.x
+- Database: PostgreSQL (production) / SQLite (development)
+- Payment: Stripe
+- Notifications: Email (Django/SendGrid) + SMS (Twilio)
+- Frontend: Django Templates + HTMX + Alpine.js
+- Styling: Tailwind CSS
+- Deployment: Railway/Render/DigitalOcean
+
+**Timeline**: 2-3 weeks for full delivery
+
+---
+
+## Phase 1: Project Setup & Foundation (Day 1-2)
+
+### 1.1 Initialize Django Project
+
+```bash
+# Create project structure
+django-admin startproject rental_booking
+cd rental_booking
+
+# Create apps
+python manage.py startapp products
+python manage.py startapp bookings
+python manage.py startapp dashboard
+python manage.py startapp notifications
+
+# Install dependencies
+pip install django djangorestframework stripe twilio python-decouple pillow django-htmx psycopg2-binary gunicorn whitenoise
+```
+
+### 1.2 Project Structure
+
+```
+rental_booking/
+├── rental_booking/          # Main project settings
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── products/                # Product management
+│   ├── models.py
+│   ├── views.py
+│   └── admin.py
+├── bookings/                # Booking logic
+│   ├── models.py
+│   ├── views.py
+│   ├── forms.py
+│   └── urls.py
+├── dashboard/               # Admin dashboard
+│   ├── views.py
+│   ├── urls.py
+│   └── templates/
+├── notifications/           # Email & SMS
+│   ├── tasks.py
+│   └── utils.py
+├── static/
+│   ├── css/
+│   ├── js/
+│   └── images/
+└── templates/
+    ├── base.html
+    ├── booking/
+    └── dashboard/
+```
+
+### 1.3 Settings Configuration
+
+**settings.py additions**:
+
+```python
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    
+    # Third party
+    'django_htmx',
+    
+    # Local apps
+    'products',
+    'bookings',
+    'dashboard',
+    'notifications',
+]
+
+MIDDLEWARE = [
+    # ... default middleware
+    'django_htmx.middleware.HtmxMiddleware',
+]
+
+# Static files
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+
+# Stripe
+STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET')
+
+# Twilio
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER')
+
+# Session configuration (for guest checkout)
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_SAVE_EVERY_REQUEST = True
+```
+
+### 1.4 Environment Variables (.env file)
+
+```env
+SECRET_KEY=your-secret-key
+DEBUG=True
+DATABASE_URL=postgresql://user:pass@localhost/rental_db
+
+EMAIL_HOST=smtp.sendgrid.net
+EMAIL_PORT=587
+EMAIL_HOST_USER=apikey
+EMAIL_HOST_PASSWORD=your-sendgrid-api-key
+DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+
+STRIPE_PUBLIC_KEY=pk_test_xxx
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+TWILIO_ACCOUNT_SID=ACxxx
+TWILIO_AUTH_TOKEN=xxx
+TWILIO_PHONE_NUMBER=+1234567890
+```
+
+---
+
+## Phase 2: Database Models (Day 2-3)
+
+### 2.1 Products App Models
+
+**products/models.py**:
+
+```python
+from django.db import models
+from django.core.validators import MinValueValidator
+from django.utils.text import slugify
+
+class ProductCategory(models.TextChoices):
+    STORAGE_POD = 'storage_pod', 'Storage Pod'
+    GARBAGE_BIN = 'garbage_bin', 'Garbage Bin'
+
+class Product(models.Model):
+    """Rental products: Storage Pods and Garbage Bins"""
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, blank=True)
+    category = models.CharField(
+        max_length=20,
+        choices=ProductCategory.choices
+    )
+    description = models.TextField()
+    size_description = models.CharField(
+        max_length=100,
+        help_text="e.g., '8ft or 16ft Units' or '10-Yard Dumpster'"
+    )
+    monthly_rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
+    )
+    image = models.ImageField(upload_to='products/')
+    stock_quantity = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0)],
+        help_text="Total available units"
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['category', 'name']
+    
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
+    def get_available_quantity(self, date):
+        """Calculate available quantity for a specific date"""
+        from bookings.models import Booking
+        booked = Booking.objects.filter(
+            product=self,
+            status__in=['confirmed', 'in_progress'],
+            drop_off_date__lte=date,
+            pickup_date__gte=date
+        ).count()
+        return self.stock_quantity - booked
+
+
+class PricingSetting(models.Model):
+    """Global pricing settings"""
+    delivery_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=79.00,
+        help_text="Flat fee for delivery/drop-off"
+    )
+    pickup_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=79.00,
+        help_text="Flat fee for pickup/removal"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=100, blank=True)
+    
+    class Meta:
+        verbose_name = "Pricing Setting"
+        verbose_name_plural = "Pricing Settings"
+    
+    def __str__(self):
+        return f"Delivery: ${self.delivery_fee} | Pickup: ${self.pickup_fee}"
+    
+    @classmethod
+    def get_settings(cls):
+        """Get or create pricing settings"""
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+class BlackoutDate(models.Model):
+    """Dates when bookings are not allowed"""
+    date = models.DateField(unique=True)
+    reason = models.CharField(max_length=200)
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="Leave blank to apply to all products"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['date']
+    
+    def __str__(self):
+        return f"{self.date} - {self.reason}"
+```
+
+### 2.2 Bookings App Models
+
+**bookings/models.py**:
+
+```python
+from django.db import models
+from django.core.validators import MinValueValidator
+from products.models import Product, PricingSetting
+import uuid
+
+class BookingStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending Payment'
+    CONFIRMED = 'confirmed', 'Confirmed'
+    IN_PROGRESS = 'in_progress', 'In Progress'
+    PICKUP_SCHEDULED = 'pickup_scheduled', 'Pickup Scheduled'
+    COMPLETED = 'completed', 'Completed'
+    CANCELLED = 'cancelled', 'Cancelled'
+
+class Booking(models.Model):
+    """Main booking model for guest checkout"""
+    # Unique identifier
+    booking_id = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        unique=True
+    )
+    
+    # Product details
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name='bookings'
+    )
+    
+    # Customer information (guest checkout - no user account)
+    customer_name = models.CharField(max_length=200)
+    customer_email = models.EmailField()
+    customer_phone = models.CharField(max_length=20)
+    
+    # Delivery information
+    delivery_address = models.TextField(help_text="Full delivery address")
+    delivery_city = models.CharField(max_length=100)
+    delivery_state = models.CharField(max_length=50)
+    delivery_zip = models.CharField(max_length=10)
+    delivery_notes = models.TextField(blank=True)
+    
+    # Booking dates
+    drop_off_date = models.DateField()
+    pickup_date = models.DateField(null=True, blank=True)
+    rental_months = models.IntegerField(
+        default=1,
+        validators=[MinValueValidator(1)]
+    )
+    
+    # Pricing
+    monthly_rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Rate at time of booking"
+    )
+    delivery_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Delivery fee at time of booking"
+    )
+    pickup_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="Pickup fee (charged when pickup scheduled)"
+    )
+    total_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+    
+    # Payment information
+    stripe_payment_intent_id = models.CharField(max_length=200, blank=True)
+    stripe_charge_id = models.CharField(max_length=200, blank=True)
+    payment_status = models.CharField(
+        max_length=20,
+        default='pending',
+        choices=[
+            ('pending', 'Pending'),
+            ('paid', 'Paid'),
+            ('refunded', 'Refunded'),
+            ('failed', 'Failed'),
+        ]
+    )
+    
+    # Booking status
+    status = models.CharField(
+        max_length=20,
+        choices=BookingStatus.choices,
+        default=BookingStatus.PENDING
+    )
+    
+    # Notifications
+    confirmation_email_sent = models.BooleanField(default=False)
+    confirmation_sms_sent = models.BooleanField(default=False)
+    drop_off_reminder_sent = models.BooleanField(default=False)
+    pickup_reminder_sent = models.BooleanField(default=False)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'drop_off_date']),
+            models.Index(fields=['customer_email']),
+        ]
+    
+    def __str__(self):
+        return f"{self.booking_id} - {self.customer_name} - {self.product.name}"
+    
+    def calculate_total(self):
+        """Calculate total booking amount"""
+        monthly_cost = self.monthly_rate * self.rental_months
+        total = monthly_cost + self.delivery_fee
+        if self.pickup_date:
+            total += self.pickup_fee
+        return total
+    
+    def save(self, *args, **kwargs):
+        # Auto-calculate total if not set
+        if not self.total_amount:
+            self.total_amount = self.calculate_total()
+        super().save(*args, **kwargs)
+
+
+class PickupRequest(models.Model):
+    """Separate model for pickup scheduling"""
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='pickup_request'
+    )
+    requested_pickup_date = models.DateField()
+    pickup_address = models.TextField(
+        blank=True,
+        help_text="If different from delivery address"
+    )
+    pickup_notes = models.TextField(blank=True)
+    
+    # Payment for pickup
+    stripe_payment_intent_id = models.CharField(max_length=200, blank=True)
+    payment_status = models.CharField(
+        max_length=20,
+        default='pending',
+        choices=[
+            ('pending', 'Pending'),
+            ('paid', 'Paid'),
+            ('refunded', 'Refunded'),
+        ]
+    )
+    
+    # Notifications
+    pickup_email_sent = models.BooleanField(default=False)
+    pickup_sms_sent = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Pickup for {self.booking.booking_id}"
+```
+
+### 2.3 Run Migrations
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+---
+
+## Phase 3: Guest Checkout Booking Flow (Day 3-5)
+
+### 3.1 Booking Views Structure
+
+**bookings/views.py**:
+
+```python
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
+from django.utils import timezone
+from django.contrib import messages
+from products.models import Product, PricingSetting, BlackoutDate
+from .models import Booking, BookingStatus
+from .forms import BookingForm
+import stripe
+from django.conf import settings
+import json
+from datetime import datetime, timedelta
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def booking_home(request):
+    """Step 1: Select Product"""
+    products = Product.objects.filter(is_active=True)
+    context = {
+        'products': products,
+        'page_title': 'Book Your Rental'
+    }
+    return render(request, 'booking/select_product.html', context)
+
+
+def select_dates(request, product_slug):
+    """Step 2: Choose Drop-off Date & Duration"""
+    product = get_object_or_404(Product, slug=product_slug, is_active=True)
+    pricing = PricingSetting.get_settings()
+    
+    # Get blackout dates for calendar
+    blackout_dates = list(
+        BlackoutDate.objects.filter(
+            models.Q(product=product) | models.Q(product__isnull=True)
+        ).values_list('date', flat=True)
+    )
+    
+    # Convert to ISO format for JavaScript
+    blackout_dates_json = json.dumps(
+        [date.isoformat() for date in blackout_dates]
+    )
+    
+    if request.method == 'POST':
+        drop_off_date = request.POST.get('drop_off_date')
+        rental_months = int(request.POST.get('rental_months', 1))
+        
+        # Store in session
+        request.session['booking_data'] = {
+            'product_id': product.id,
+            'drop_off_date': drop_off_date,
+            'rental_months': rental_months,
+        }
+        
+        return redirect('booking:customer_details')
+    
+    context = {
+        'product': product,
+        'pricing': pricing,
+        'blackout_dates': blackout_dates_json,
+        'min_date': (timezone.now() + timedelta(days=1)).date().isoformat(),
+        'page_title': f'Book {product.name}'
+    }
+    return render(request, 'booking/select_dates.html', context)
+
+
+def customer_details(request):
+    """Step 3: Customer Information & Location"""
+    booking_data = request.session.get('booking_data')
+    
+    if not booking_data:
+        messages.error(request, 'Please start from product selection.')
+        return redirect('booking:home')
+    
+    product = get_object_or_404(Product, id=booking_data['product_id'])
+    pricing = PricingSetting.get_settings()
+    
+    # Calculate pricing
+    monthly_cost = product.monthly_rate * booking_data['rental_months']
+    total = monthly_cost + pricing.delivery_fee
+    
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            # Store customer details in session
+            request.session['booking_data'].update({
+                'customer_name': form.cleaned_data['customer_name'],
+                'customer_email': form.cleaned_data['customer_email'],
+                'customer_phone': form.cleaned_data['customer_phone'],
+                'delivery_address': form.cleaned_data['delivery_address'],
+                'delivery_city': form.cleaned_data['delivery_city'],
+                'delivery_state': form.cleaned_data['delivery_state'],
+                'delivery_zip': form.cleaned_data['delivery_zip'],
+                'delivery_notes': form.cleaned_data.get('delivery_notes', ''),
+            })
+            
+            return redirect('booking:order_summary')
+    else:
+        form = BookingForm()
+    
+    context = {
+        'form': form,
+        'product': product,
+        'booking_data': booking_data,
+        'monthly_cost': monthly_cost,
+        'delivery_fee': pricing.delivery_fee,
+        'total': total,
+        'page_title': 'Your Information'
+    }
+    return render(request, 'booking/customer_details.html', context)
+
+
+def order_summary(request):
+    """Step 4: Order Summary & Payment"""
+    booking_data = request.session.get('booking_data')
+    
+    if not booking_data or 'customer_email' not in booking_data:
+        messages.error(request, 'Please complete all steps.')
+        return redirect('booking:home')
+    
+    product = get_object_or_404(Product, id=booking_data['product_id'])
+    pricing = PricingSetting.get_settings()
+    
+    # Calculate pricing
+    monthly_cost = product.monthly_rate * booking_data['rental_months']
+    total = monthly_cost + pricing.delivery_fee
+    
+    # Create Stripe PaymentIntent
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=int(total * 100),  # Stripe uses cents
+            currency='usd',
+            metadata={
+                'product_name': product.name,
+                'customer_email': booking_data['customer_email'],
+                'drop_off_date': booking_data['drop_off_date'],
+            }
+        )
+        
+        client_secret = intent.client_secret
+    except Exception as e:
+        messages.error(request, f'Payment setup error: {str(e)}')
+        return redirect('booking:customer_details')
+    
+    context = {
+        'product': product,
+        'booking_data': booking_data,
+        'monthly_cost': monthly_cost,
+        'delivery_fee': pricing.delivery_fee,
+        'total': total,
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+        'client_secret': client_secret,
+        'page_title': 'Order Summary'
+    }
+    return render(request, 'booking/order_summary.html', context)
+
+
+@require_http_methods(["POST"])
+def process_payment(request):
+    """Process payment and create booking"""
+    booking_data = request.session.get('booking_data')
+    
+    if not booking_data:
+        return JsonResponse({'error': 'Session expired'}, status=400)
+    
+    try:
+        payment_intent_id = request.POST.get('payment_intent_id')
+        
+        # Verify payment with Stripe
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        
+        if intent.status != 'succeeded':
+            return JsonResponse({'error': 'Payment not completed'}, status=400)
+        
+        # Create booking
+        product = Product.objects.get(id=booking_data['product_id'])
+        pricing = PricingSetting.get_settings()
+        
+        booking = Booking.objects.create(
+            product=product,
+            customer_name=booking_data['customer_name'],
+            customer_email=booking_data['customer_email'],
+            customer_phone=booking_data['customer_phone'],
+            delivery_address=booking_data['delivery_address'],
+            delivery_city=booking_data['delivery_city'],
+            delivery_state=booking_data['delivery_state'],
+            delivery_zip=booking_data['delivery_zip'],
+            delivery_notes=booking_data.get('delivery_notes', ''),
+            drop_off_date=booking_data['drop_off_date'],
+            rental_months=booking_data['rental_months'],
+            monthly_rate=product.monthly_rate,
+            delivery_fee=pricing.delivery_fee,
+            pickup_fee=pricing.pickup_fee,
+            stripe_payment_intent_id=payment_intent_id,
+            stripe_charge_id=intent.charges.data[0].id if intent.charges.data else '',
+            payment_status='paid',
+            status=BookingStatus.CONFIRMED,
+            confirmed_at=timezone.now()
+        )
+        
+        # Clear session
+        del request.session['booking_data']
+        
+        # Send notifications (async)
+        from notifications.tasks import send_booking_confirmation
+        send_booking_confirmation(booking.id)
+        
+        return JsonResponse({
+            'success': True,
+            'booking_id': str(booking.booking_id),
+            'redirect_url': f'/booking/confirmation/{booking.booking_id}/'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def booking_confirmation(request, booking_id):
+    """Confirmation page after successful booking"""
+    booking = get_object_or_404(Booking, booking_id=booking_id)
+    
+    context = {
+        'booking': booking,
+        'page_title': 'Booking Confirmed'
+    }
+    return render(request, 'booking/confirmation.html', context)
+```
+
+### 3.2 Booking Forms
+
+**bookings/forms.py**:
+
+```python
+from django import forms
+from .models import Booking
+
+class BookingForm(forms.Form):
+    customer_name = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'John Doe'
+        })
+    )
+    customer_email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'john@example.com'
+        })
+    )
+    customer_phone = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': '(555) 123-4567'
+        })
+    )
+    delivery_address = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-input',
+            'rows': 2,
+            'placeholder': '123 Main Street'
+        })
+    )
+    delivery_city = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'City'
+        })
+    )
+    delivery_state = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'State'
+        })
+    )
+    delivery_zip = forms.CharField(
+        max_length=10,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'ZIP Code'
+        })
+    )
+    delivery_notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-input',
+            'rows': 3,
+            'placeholder': 'Any special instructions or notes'
+        })
+    )
+
+
+class PickupRequestForm(forms.Form):
+    booking_id = forms.UUIDField(widget=forms.HiddenInput())
+    customer_email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Email used for booking'
+        })
+    )
+    requested_pickup_date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-input',
+            'type': 'date'
+        })
+    )
+    pickup_notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-input',
+            'rows': 3,
+            'placeholder': 'Any special instructions'
+        })
+    )
+```
+
+### 3.3 URL Configuration
+
+**bookings/urls.py**:
+
+```python
+from django.urls import path
+from . import views
+
+app_name = 'booking'
+
+urlpatterns = [
+    path('', views.booking_home, name='home'),
+    path('product/<slug:product_slug>/', views.select_dates, name='select_dates'),
+    path('details/', views.customer_details, name='customer_details'),
+    path('summary/', views.order_summary, name='order_summary'),
+    path('process-payment/', views.process_payment, name='process_payment'),
+    path('confirmation/<uuid:booking_id>/', views.booking_confirmation, name='confirmation'),
+    path('pickup/', views.schedule_pickup, name='schedule_pickup'),
+    path('pickup/process/', views.process_pickup, name='process_pickup'),
+]
+```
+
+---
+
+## Phase 4: Admin Dashboard (Day 5-7)
+
+### 4.1 Dashboard Views
+
+**dashboard/views.py**:
+
+```python
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Count, Q, Sum
+from django.utils import timezone
+from datetime import timedelta
+from bookings.models import Booking, BookingStatus
+from products.models import Product, PricingSetting, BlackoutDate
+from django.contrib import messages
+from django.http import JsonResponse
+
+@staff_member_required
+def dashboard_home(request):
+    """Main dashboard with statistics"""
+    today = timezone.now().date()
+    
+    # Statistics
+    new_orders = Booking.objects.filter(
+        created_at__date=today
+    ).count()
+    
+    scheduled_today = Booking.objects.filter(
+        drop_off_date=today,
+        status=BookingStatus.CONFIRMED
+    ).count()
+    
+    # Units available (total stock - active rentals)
+    products = Product.objects.annotate(
+        active_rentals=Count(
+            'bookings',
+            filter=Q(
+                bookings__status__in=[BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS],
+                bookings__drop_off_date__lte=today,
+                bookings__pickup_date__gte=today
+            ) | Q(
+                bookings__status__in=[BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS],
+                bookings__drop_off_date__lte=today,
+                bookings__pickup_date__isnull=True
+            )
+        )
+    )
+    
+    units_available = sum(p.stock_quantity - p.active_rentals for p in products)
+    
+    # Blackout dates coming up
+    upcoming_blackouts = BlackoutDate.objects.filter(
+        date__gte=today
+    ).order_by('date')[:3]
+    
+    # Recent orders
+    recent_orders = Booking.objects.select_related('product').order_by('-created_at')[:10]
+    
+    context = {
+        'new_orders': new_orders,
+        'scheduled_today': scheduled_today,
+        'units_available': units_available,
+        'blackout_dates': upcoming_blackouts,
+        'recent_orders': recent_orders,
+        'page_title': 'Dashboard'
+    }
+    return render(request, 'dashboard/home.html', context)
+
+
+@staff_member_required
+def manage_orders(request):
+    """View and manage all orders"""
+    status_filter = request.GET.get('status', 'all')
+    date_filter = request.GET.get('date', 'all')
+    
+    orders = Booking.objects.select_related('product').order_by('-created_at')
+    
+    # Apply filters
+    if status_filter != 'all':
+        orders = orders.filter(status=status_filter)
+    
+    if date_filter == 'today':
+        orders = orders.filter(drop_off_date=timezone.now().date())
+    elif date_filter == 'week':
+        week_start = timezone.now().date()
+        week_end = week_start + timedelta(days=7)
+        orders = orders.filter(drop_off_date__range=[week_start, week_end])
+    
+    context = {
+        'orders': orders,
+        'status_filter': status_filter,
+        'date_filter': date_filter,
+        'status_choices': BookingStatus.choices,
+        'page_title': 'Manage Orders'
+    }
+    return render(request, 'dashboard/manage_orders.html', context)
+
+
+@staff_member_required
+def order_detail(request, booking_id):
+    """View single order details"""
+    booking = get_object_or_404(
+        Booking.objects.select_related('product'),
+        booking_id=booking_id
+    )
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'update_status':
+            new_status = request.POST.get('status')
+            booking.status = new_status
+            booking.save()
+            messages.success(request, f'Order status updated to {booking.get_status_display()}')
+            return redirect('dashboard:order_detail', booking_id=booking_id)
+    
+    context = {
+        'booking': booking,
+        'status_choices': BookingStatus.choices,
+        'page_title': f'Order {booking.booking_id}'
+    }
+    return render(request, 'dashboard/order_detail.html', context)
+
+
+@staff_member_required
+def manage_inventory(request):
+    """Manage product inventory"""
+    products = Product.objects.annotate(
+        active_rentals=Count(
+            'bookings',
+            filter=Q(bookings__status__in=[BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS])
+        )
+    )
+    
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        stock_quantity = request.POST.get('stock_quantity')
+        
+        product = get_object_or_404(Product, id=product_id)
+        product.stock_quantity = int(stock_quantity)
+        product.save()
+        
+        messages.success(request, f'{product.name} stock updated to {stock_quantity}')
+        return redirect('dashboard:manage_inventory')
+    
+    context = {
+        'products': products,
+        'page_title': 'Manage Inventory'
+    }
+    return render(request, 'dashboard/manage_inventory.html', context)
+
+
+@staff_member_required
+def pricing_settings(request):
+    """Update pricing settings"""
+    pricing = PricingSetting.get_settings()
+    
+    if request.method == 'POST':
+        pricing.delivery_fee = request.POST.get('delivery_fee')
+        pricing.pickup_fee = request.POST.get('pickup_fee')
+        pricing.updated_by = request.user.username
+        pricing.save()
+        
+        messages.success(request, 'Pricing updated successfully')
+        return redirect('dashboard:pricing_settings')
+    
+    context = {
+        'pricing': pricing,
+        'page_title': 'Pricing Settings'
+    }
+    return render(request, 'dashboard/pricing_settings.html', context)
+
+
+@staff_member_required
+def manage_blackouts(request):
+    """Manage blackout dates"""
+    blackouts = BlackoutDate.objects.select_related('product').order_by('-date')
+    products = Product.objects.all()
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'add':
+            date = request.POST.get('date')
+            reason = request.POST.get('reason')
+            product_id = request.POST.get('product_id')
+            
+            product = None
+            if product_id:
+                product = Product.objects.get(id=product_id)
+            
+            BlackoutDate.objects.create(
+                date=date,
+                reason=reason,
+                product=product
+            )
+            messages.success(request, 'Blackout date added')
+            
+        elif action == 'delete':
+            blackout_id = request.POST.get('blackout_id')
+            BlackoutDate.objects.filter(id=blackout_id).delete()
+            messages.success(request, 'Blackout date removed')
+        
+        return redirect('dashboard:manage_blackouts')
+    
+    context = {
+        'blackouts': blackouts,
+        'products': products,
+        'page_title': 'Blackout Dates'
+    }
+    return render(request, 'dashboard/manage_blackouts.html', context)
+```
+
+### 4.2 Dashboard URLs
+
+**dashboard/urls.py**:
+
+```python
+from django.urls import path
+from . import views
+
+app_name = 'dashboard'
+
+urlpatterns = [
+    path('', views.dashboard_home, name='home'),
+    path('orders/', views.manage_orders, name='manage_orders'),
+    path('orders/<uuid:booking_id>/', views.order_detail, name='order_detail'),
+    path('inventory/', views.manage_inventory, name='manage_inventory'),
+    path('pricing/', views.pricing_settings, name='pricing_settings'),
+    path('blackouts/', views.manage_blackouts, name='manage_blackouts'),
+]
+```
+
+---
+
+## Phase 5: Email & SMS Notifications (Day 7-8)
+
+### 5.1 Notification Utilities
+
+**notifications/utils.py**:
+
+```python
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.conf import settings
+from twilio.rest import Client
+import logging
+
+logger = logging.getLogger(__name__)
+
+def send_email_notification(subject, to_email, template_name, context):
+    """Send HTML email notification"""
+    try:
+        html_content = render_to_string(f'emails/{template_name}.html', context)
+        text_content = render_to_string(f'emails/{template_name}.txt', context)
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+        
+        logger.info(f'Email sent to {to_email}: {subject}')
+        return True
+    except Exception as e:
+        logger.error(f'Email sending failed to {to_email}: {str(e)}')
+        return False
+
+
+def send_sms_notification(to_phone, message):
+    """Send SMS notification via Twilio"""
+    try:
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        
+        # Format phone number
+        if not to_phone.startswith('+'):
+            to_phone = f'+1{to_phone.replace("-", "").replace("(", "").replace(")", "").replace(" ", "")}'
+        
+        message = client.messages.create(
+            body=message,
+            from_=settings.TWILIO_PHONE_NUMBER,
+            to=to_phone
+        )
+        
+        logger.info(f'SMS sent to {to_phone}: {message.sid}')
+        return True
+    except Exception as e:
+        logger.error(f'SMS sending failed to {to_phone}: {str(e)}')
+        return False
+```
+
+### 5.2 Notification Tasks
+
+**notifications/tasks.py**:
+
+```python
+from bookings.models import Booking, PickupRequest
+from .utils import send_email_notification, send_sms_notification
+
+def send_booking_confirmation(booking_id):
+    """Send booking confirmation email and SMS"""
+    try:
+        booking = Booking.objects.select_related('product').get(id=booking_id)
+        
+        # Email notification
+        context = {
+            'booking': booking,
+            'site_name': 'Rental Services',
+        }
+        
+        email_sent = send_email_notification(
+            subject=f'Booking Confirmed - {booking.booking_id}',
+            to_email=booking.customer_email,
+            template_name='booking_confirmation',
+            context=context
+        )
+        
+        if email_sent:
+            booking.confirmation_email_sent = True
+        
+        # SMS notification
+        sms_message = f"Your rental is confirmed! Delivery on {booking.drop_off_date.strftime('%b %d')}. Booking ID: {booking.booking_id}"
+        
+        sms_sent = send_sms_notification(
+            to_phone=booking.customer_phone,
+            message=sms_message
+        )
+        
+        if sms_sent:
+            booking.confirmation_sms_sent = True
+        
+        booking.save()
+        
+    except Exception as e:
+        logger.error(f'Error sending booking confirmation for {booking_id}: {str(e)}')
+
+
+def send_drop_off_reminder(booking_id):
+    """Send reminder 1 day before drop-off"""
+    try:
+        booking = Booking.objects.select_related('product').get(id=booking_id)
+        
+        context = {
+            'booking': booking,
+            'site_name': 'Rental Services',
+        }
+        
+        email_sent = send_email_notification(
+            subject=f'Delivery Tomorrow - {booking.product.name}',
+            to_email=booking.customer_email,
+            template_name='drop_off_reminder',
+            context=context
+        )
+        
+        if email_sent:
+            booking.drop_off_reminder_sent = True
+        
+        sms_message = f"Reminder: Your {booking.product.name} will be delivered tomorrow at {booking.delivery_address}"
+        
+        sms_sent = send_sms_notification(
+            to_phone=booking.customer_phone,
+            message=sms_message
+        )
+        
+        booking.save()
+        
+    except Exception as e:
+        logger.error(f'Error sending drop-off reminder for {booking_id}: {str(e)}')
+
+
+def send_pickup_confirmation(pickup_request_id):
+    """Send pickup confirmation"""
+    try:
+        pickup = PickupRequest.objects.select_related('booking__product').get(id=pickup_request_id)
+        booking = pickup.booking
+        
+        context = {
+            'booking': booking,
+            'pickup': pickup,
+            'site_name': 'Rental Services',
+        }
+        
+        email_sent = send_email_notification(
+            subject=f'Pickup Scheduled - {booking.booking_id}',
+            to_email=booking.customer_email,
+            template_name='pickup_confirmation',
+            context=context
+        )
+        
+        if email_sent:
+            pickup.pickup_email_sent = True
+        
+        sms_message = f"Pickup scheduled for {pickup.requested_pickup_date.strftime('%b %d')}. We'll collect your {booking.product.name}."
+        
+        sms_sent = send_sms_notification(
+            to_phone=booking.customer_phone,
+            message=sms_message
+        )
+        
+        if sms_sent:
+            pickup.pickup_sms_sent = True
+        
+        pickup.save()
+        
+    except Exception as e:
+        logger.error(f'Error sending pickup confirmation for {pickup_request_id}: {str(e)}')
+```
+
+### 5.3 Email Templates
+
+Create these in `templates/emails/`:
+
+**booking_confirmation.html** (example structure):
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #007bff; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .booking-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #007bff; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Booking Confirmed!</h1>
+        </div>
+        <div class="content">
+            <p>Hi {{ booking.customer_name }},</p>
+            <p>Your rental has been confirmed. Here are your booking details:</p>
+            
+            <div class="booking-details">
+                <p><strong>Booking ID:</strong> {{ booking.booking_id }}</p>
+                <p><strong>Product:</strong> {{ booking.product.name }}</p>
+                <p><strong>Delivery Date:</strong> {{ booking.drop_off_date|date:"F d, Y" }}</p>
+                <p><strong>Location:</strong> {{ booking.delivery_address }}, {{ booking.delivery_city }}, {{ booking.delivery_state }} {{ booking.delivery_zip }}</p>
+                <p><strong>Total Paid:</strong> ${{ booking.total_amount }}</p>
+            </div>
+            
+            <p>We'll send you a reminder the day before delivery.</p>
+            <p>When you're ready for pickup, visit our website to schedule collection.</p>
+        </div>
+        <div class="footer">
+            <p>Questions? Reply to this email or call us.</p>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+**booking_confirmation.txt**:
+```
+Booking Confirmed!
+
+Hi {{ booking.customer_name }},
+
+Your rental has been confirmed.
+
+Booking ID: {{ booking.booking_id }}
+Product: {{ booking.product.name }}
+Delivery Date: {{ booking.drop_off_date|date:"F d, Y" }}
+Location: {{ booking.delivery_address }}, {{ booking.delivery_city }}, {{ booking.delivery_state }} {{ booking.delivery_zip }}
+Total Paid: ${{ booking.total_amount }}
+
+We'll send you a reminder the day before delivery.
+
+Questions? Reply to this email.
+```
+
+---
+
+## Phase 6: Pickup Scheduling (Day 8-9)
+
+### 6.1 Pickup Views
+
+**Add to bookings/views.py**:
+
+```python
+def schedule_pickup(request):
+    """Guest pickup scheduling form"""
+    if request.method == 'POST':
+        form = PickupRequestForm(request.POST)
+        if form.is_valid():
+            booking_id = form.cleaned_data['booking_id']
+            customer_email = form.cleaned_data['customer_email']
+            
+            # Verify booking exists and email matches
+            try:
+                booking = Booking.objects.get(
+                    booking_id=booking_id,
+                    customer_email=customer_email,
+                    status__in=[BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS]
+                )
+            except Booking.DoesNotExist:
+                messages.error(request, 'Booking not found or invalid email.')
+                return render(request, 'booking/schedule_pickup.html', {'form': form})
+            
+            # Check if pickup already scheduled
+            if hasattr(booking, 'pickup_request'):
+                messages.info(request, 'Pickup already scheduled for this booking.')
+                return redirect('booking:pickup_detail', booking_id=booking_id)
+            
+            # Store in session for payment
+            request.session['pickup_data'] = {
+                'booking_id': str(booking_id),
+                'requested_pickup_date': form.cleaned_data['requested_pickup_date'].isoformat(),
+                'pickup_notes': form.cleaned_data.get('pickup_notes', ''),
+            }
+            
+            return redirect('booking:pickup_payment')
+    else:
+        form = PickupRequestForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Schedule Pickup'
+    }
+    return render(request, 'booking/schedule_pickup.html', context)
+
+
+def pickup_payment(request):
+    """Pickup payment processing"""
+    pickup_data = request.session.get('pickup_data')
+    
+    if not pickup_data:
+        messages.error(request, 'Please complete the pickup form first.')
+        return redirect('booking:schedule_pickup')
+    
+    booking = get_object_or_404(Booking, booking_id=pickup_data['booking_id'])
+    pricing = PricingSetting.get_settings()
+    
+    # Create Stripe PaymentIntent for pickup fee
+    try:
+        intent = stripe.PaymentIntent.create(
+            amount=int(pricing.pickup_fee * 100),
+            currency='usd',
+            metadata={
+                'booking_id': str(booking.booking_id),
+                'type': 'pickup_fee',
+            }
+        )
+        
+        client_secret = intent.client_secret
+    except Exception as e:
+        messages.error(request, f'Payment setup error: {str(e)}')
+        return redirect('booking:schedule_pickup')
+    
+    context = {
+        'booking': booking,
+        'pickup_data': pickup_data,
+        'pickup_fee': pricing.pickup_fee,
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+        'client_secret': client_secret,
+        'page_title': 'Pickup Payment'
+    }
+    return render(request, 'booking/pickup_payment.html', context)
+
+
+@require_http_methods(["POST"])
+def process_pickup(request):
+    """Process pickup payment and create pickup request"""
+    pickup_data = request.session.get('pickup_data')
+    
+    if not pickup_data:
+        return JsonResponse({'error': 'Session expired'}, status=400)
+    
+    try:
+        payment_intent_id = request.POST.get('payment_intent_id')
+        
+        # Verify payment
+        intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        
+        if intent.status != 'succeeded':
+            return JsonResponse({'error': 'Payment not completed'}, status=400)
+        
+        # Create pickup request
+        booking = Booking.objects.get(booking_id=pickup_data['booking_id'])
+        
+        pickup_request = PickupRequest.objects.create(
+            booking=booking,
+            requested_pickup_date=pickup_data['requested_pickup_date'],
+            pickup_notes=pickup_data.get('pickup_notes', ''),
+            stripe_payment_intent_id=payment_intent_id,
+            payment_status='paid',
+            confirmed_at=timezone.now()
+        )
+        
+        # Update booking
+        booking.status = BookingStatus.PICKUP_SCHEDULED
+        booking.pickup_date = pickup_data['requested_pickup_date']
+        booking.save()
+        
+        # Clear session
+        del request.session['pickup_data']
+        
+        # Send notifications
+        from notifications.tasks import send_pickup_confirmation
+        send_pickup_confirmation(pickup_request.id)
+        
+        return JsonResponse({
+            'success': True,
+            'booking_id': str(booking.booking_id),
+            'redirect_url': f'/booking/pickup/confirmed/{booking.booking_id}/'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+```
+
+---
+
+## Phase 7: Frontend Templates (Day 9-11)
+
+### 7.1 Base Template
+
+**templates/base.html**:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ page_title }} | Rental Services{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Stripe -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'booking:home' %}" class="text-2xl font-bold text-blue-600">
+                        Rental Services
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'booking:schedule_pickup' %}" class="text-gray-700 hover:text-blue-600">
+                        Schedule Pickup
+                    </a>
+                    {% if user.is_staff %}
+                    <a href="{% url 'dashboard:home' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        Admin Dashboard
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Messages -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-800{% elif message.tags == 'success' %}bg-green-50 border-green-200 text-green-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %} border px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-600">
+            <p>&copy; 2024 Rental Services. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+```
+
+### 7.2 Product Selection Template
+
+**templates/booking/select_product.html**:
+
+```html
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="text-center mb-12">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">Book Your Rental</h1>
+    <p class="text-xl text-gray-600">Choose the product that fits your needs</p>
+</div>
+
+<div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+    {% for product in products %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ product.name }}</h2>
+            <p class="text-gray-600 mb-2">{{ product.size_description }}</p>
+            <p class="text-gray-700 mb-4">{{ product.description }}</p>
+            
+            <div class="flex items-baseline mb-6">
+                <span class="text-3xl font-bold text-blue-600">${{ product.monthly_rate }}</span>
+                <span class="text-gray-600 ml-2">/month</span>
+            </div>
+            
+            <a href="{% url 'booking:select_dates' product.slug %}" 
+               class="block w-full bg-blue-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                Select This Product
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+```
+
+### 7.3 Date Selection Template with Calendar
+
+**templates/booking/select_dates.html**:
+
+```html
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Progress Steps -->
+    <div class="mb-8">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">1</div>
+                <p class="text-sm text-gray-600 mt-2">Select Product</p>
+            </div>
+            <div class="flex-1 h-1 bg-blue-600"></div>
+            <div class="flex-1">
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">2</div>
+                <p class="text-sm text-gray-600 mt-2">Choose Dates</p>
+            </div>
+            <div class="flex-1 h-1 bg-gray-300"></div>
+            <div class="flex-1">
+                <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold">3</div>
+                <p class="text-sm text-gray-600 mt-2">Your Info</p>
+            </div>
+            <div class="flex-1 h-1 bg-gray-300"></div>
+            <div class="flex-1">
+                <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold">4</div>
+                <p class="text-sm text-gray-600 mt-2">Confirm</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h2 class="text-2xl font-bold mb-6">Choose Drop-Off Date & Duration</h2>
+        
+        <form method="post" x-data="dateSelector()">
+            {% csrf_token %}
+            
+            <!-- Product Summary -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <p class="text-sm text-gray-600">Selected Product</p>
+                <p class="text-lg font-semibold">{{ product.name }}</p>
+                <p class="text-blue-600 font-bold">${{ product.monthly_rate }}/month</p>
+            </div>
+            
+            <!-- Date Picker -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Drop-Off Date</label>
+                <input type="text" 
+                       name="drop_off_date" 
+                       id="drop_off_date"
+                       x-model="dropOffDate"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       required>
+            </div>
+            
+            <!-- Rental Duration -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Rental Duration</label>
+                <select name="rental_months" 
+                        x-model="rentalMonths"
+                        @change="updatePrice"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="1">1 Month</option>
+                    <option value="2">2 Months</option>
+                    <option value="3">3 Months</option>
+                    <option value="4">4 Months</option>
+                    <option value="5">5 Months</option>
+                    <option value="6">6 Months</option>
+                </select>
+            </div>
+            
+            <!-- Price Summary -->
+            <div class="bg-blue-50 p-4 rounded-lg mb-6">
+                <div class="flex justify-between mb-2">
+                    <span>Monthly Rental (<span x-text="rentalMonths"></span> month<span x-show="rentalMonths > 1">s</span>):</span>
+                    <span class="font-semibold">$<span x-text="monthlyCost"></span></span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span>Delivery Fee:</span>
+                    <span class="font-semibold">${{ pricing.delivery_fee }}</span>
+                </div>
+                <div class="border-t border-blue-200 pt-2 mt-2">
+                    <div class="flex justify-between text-lg">
+                        <span class="font-bold">Total:</span>
+                        <span class="font-bold text-blue-600">$<span x-text="total"></span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" 
+                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                Continue to Your Information
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+function dateSelector() {
+    return {
+        dropOffDate: '',
+        rentalMonths: 1,
+        monthlyRate: {{ product.monthly_rate }},
+        deliveryFee: {{ pricing.delivery_fee }},
+        monthlyCost: {{ product.monthly_rate }},
+        total: {{ product.monthly_rate }} + {{ pricing.delivery_fee }},
+        
+        init() {
+            const blackoutDates = {{ blackout_dates|safe }};
+            
+            flatpickr("#drop_off_date", {
+                minDate: "{{ min_date }}",
+                disable: blackoutDates,
+                dateFormat: "Y-m-d",
+                onChange: (selectedDates, dateStr) => {
+                    this.dropOffDate = dateStr;
+                }
+            });
+        },
+        
+        updatePrice() {
+            this.monthlyCost = this.monthlyRate * this.rentalMonths;
+            this.total = this.monthlyCost + this.deliveryFee;
+        }
+    }
+}
+</script>
+{% endblock %}
+```
+
+---
+
+## Phase 8: Payment Integration (Day 11-12)
+
+### 8.1 Stripe Payment Template
+
+**templates/booking/order_summary.html**:
+
+```html
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class

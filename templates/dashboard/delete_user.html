@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Delete Staff User{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Delete Staff User</h1>
+    <div class="bg-white rounded-lg shadow p-6 max-w-lg mx-auto">
+        <form method="post">
+            {% csrf_token %}
+            <p class="mb-4">Are you sure you want to delete <strong>{{ user.username }}</strong>?</p>
+            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold">Delete</button>
+            <a href="{% url 'dashboard:manage_users' %}" class="ml-4 text-gray-600">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto text-center">
+    <!-- Success Message -->
+    <div class="bg-green-50 border-2 border-green-200 rounded-lg p-8 mb-8">
+        <div class="text-6xl mb-4">✓</div>
+        <h1 class="text-4xl font-bold text-green-700 mb-2">Booking Confirmed!</h1>
+        <p class="text-xl text-gray-600">Your rental has been successfully booked</p>
+    </div>
+    
+    <!-- Booking Details -->
+    <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-6">Booking Details</h2>
+        
+        <div class="space-y-4 text-left bg-gray-50 p-6 rounded-lg">
+            <div class="flex justify-between border-b pb-2">
+                <span class="text-gray-700">Booking ID:</span>
+                <span class="font-mono font-bold">{{ booking.booking_id }}</span>
+            </div>
+            <div class="flex justify-between border-b pb-2">
+                <span class="text-gray-700">Product:</span>
+                <span class="font-bold">{{ booking.product.name }}</span>
+            </div>
+            <div class="flex justify-between border-b pb-2">
+                <span class="text-gray-700">Drop-off Date:</span>
+                <span class="font-bold">{{ booking.drop_off_date|date:"F d, Y" }}</span>
+            </div>
+            <div class="flex justify-between border-b pb-2">
+                <span class="text-gray-700">Rental Duration:</span>
+                <span class="font-bold">{{ booking.rental_months }} month(s)</span>
+            </div>
+            <div class="flex justify-between border-b pb-2">
+                <span class="text-gray-700">Delivery Address:</span>
+                <span class="font-bold">{{ booking.delivery_city }}, {{ booking.delivery_state }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-700">Amount Paid:</span>
+                <span class="font-bold text-green-600">${{ booking.total_amount|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Next Steps -->
+    <div class="bg-blue-50 border-l-4 border-blue-600 p-6 rounded mb-8 text-left">
+        <h3 class="text-xl font-bold text-blue-900 mb-4">What's Next?</h3>
+        <ul class="space-y-3 text-gray-700">
+            <li class="flex items-start">
+                <span class="text-blue-600 font-bold mr-3">1.</span>
+                <span>A confirmation email has been sent to <strong>{{ booking.customer_email }}</strong></span>
+            </li>
+            <li class="flex items-start">
+                <span class="text-blue-600 font-bold mr-3">2.</span>
+                <span>You'll receive an SMS reminder one day before delivery ({{ booking.drop_off_date|date:"F d, Y" }})</span>
+            </li>
+            <li class="flex items-start">
+                <span class="text-blue-600 font-bold mr-3">3.</span>
+                <span>When ready, <a href="{% url 'booking:schedule_pickup' %}" class="text-blue-600 hover:underline">schedule pickup</a> using your booking ID and email</span>
+            </li>
+            <li class="flex items-start">
+                <span class="text-blue-600 font-bold mr-3">4.</span>
+                <span>Pickup fee will be charged when you confirm the pickup date</span>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Contact Info -->
+    <div class="mb-8">
+        <p class="text-gray-600">Questions? <a href="mailto:support@rentals.com" class="text-blue-600 hover:underline">Contact our support team</a></p>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex gap-4 justify-center">
+        <a href="{% url 'booking:home' %}" 
+           class="bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 transition">
+            Book Another Rental
+        </a>
+        <a href="{% url 'booking:schedule_pickup' %}" 
+           class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+            Schedule Pickup Later
+        </a>
+    </div>
+</div>
+{% endblock %}

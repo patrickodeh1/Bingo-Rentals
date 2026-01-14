@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="text-center mb-12">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">Book Your Rental</h1>
+    <p class="text-xl text-gray-600">Choose the product that fits your needs</p>
+</div>
+
+<div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+    {% for product in products %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+        {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-48 object-cover">
+        {% else %}
+        <div class="w-full h-48 bg-gray-200 flex items-center justify-center">
+            <span class="text-gray-400">No image</span>
+        </div>
+        {% endif %}
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ product.name }}</h2>
+            <p class="text-gray-600 mb-2 font-semibold">{{ product.size_description }}</p>
+            <p class="text-gray-700 mb-4">{{ product.description|truncatewords:20 }}</p>
+            
+            <div class="flex items-baseline mb-6">
+                <span class="text-3xl font-bold text-blue-600">${{ product.monthly_rate }}</span>
+                <span class="text-gray-600 ml-2">/month</span>
+            </div>
+            
+            <a href="{% url 'booking:select_dates' product.slug %}" 
+               class="block w-full bg-blue-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                Select This Product
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

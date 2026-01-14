@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #ff9900; color: white; padding: 20px; text-align: center; border-radius: 4px 4px 0 0; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .reminder-box { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #ff9900; }
+        .reminder-box div { margin: 10px 0; }
+        .label { font-weight: bold; color: #555; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Delivery Reminder</h1>
+        </div>
+        <div class="content">
+            <p>Hi {{ booking.customer_name }},</p>
+            <p>This is a reminder that your {{ booking.product.name }} will be delivered <strong>TOMORROW</strong> ({{ booking.drop_off_date|date:"F d, Y" }}).</p>
+            
+            <div class="reminder-box">
+                <div>
+                    <span class="label">Booking ID:</span> {{ booking.booking_id }}
+                </div>
+                <div>
+                    <span class="label">Product:</span> {{ booking.product.name }}
+                </div>
+                <div>
+                    <span class="label">Delivery Date:</span> {{ booking.drop_off_date|date:"F d, Y" }}
+                </div>
+                <div>
+                    <span class="label">Delivery Location:</span> {{ booking.delivery_address }}, {{ booking.delivery_city }}, {{ booking.delivery_state }} {{ booking.delivery_zip }}
+                </div>
+            </div>
+            
+            <h3>Please Prepare</h3>
+            <ul>
+                <li>Ensure someone is available to receive the delivery</li>
+                <li>Confirm that the delivery location is accessible</li>
+                <li>Clear the area where the unit will be placed</li>
+            </ul>
+            
+            <p>If you need to reschedule or have any questions, please contact us as soon as possible.</p>
+            
+            <p>Best regards,<br>{{ site_name }} Team</p>
+        </div>
+        <div class="footer">
+            <p>Contact support@rentals.com for assistance.</p>
+            <p>&copy; 2024 {{ site_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

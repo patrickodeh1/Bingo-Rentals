@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Progress Steps -->
+    <div class="mb-12">
+        <div class="flex items-center justify-between">
+            <div class="flex flex-col items-center">
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+                <p class="text-sm text-gray-600 mt-2">Select Product</p>
+            </div>
+            <div class="flex-1 h-1 bg-blue-600 mx-2"></div>
+            <div class="flex flex-col items-center">
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+                <p class="text-sm text-gray-600 mt-2">Choose Dates</p>
+            </div>
+            <div class="flex-1 h-1 bg-blue-600 mx-2"></div>
+            <div class="flex flex-col items-center">
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">3</div>
+                <p class="text-sm text-gray-600 mt-2">Your Info</p>
+            </div>
+            <div class="flex-1 h-1 bg-gray-300 mx-2"></div>
+            <div class="flex flex-col items-center">
+                <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold">4</div>
+                <p class="text-sm text-gray-600 mt-2">Confirm</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h2 class="text-2xl font-bold mb-6">Your Information</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Product Summary -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <p class="text-sm text-gray-600">Booking Details</p>
+                <p class="text-lg font-semibold">{{ product.name }}</p>
+                <p class="text-gray-600 text-sm">Drop-off: {{ booking_data.drop_off_date }} | Duration: {{ booking_data.rental_months }} month(s)</p>
+            </div>
+            
+            <!-- Form Fields -->
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    {{ form.customer_name }}
+                    {% if form.customer_name.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.customer_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    {{ form.customer_email }}
+                    {% if form.customer_email.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.customer_email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                {{ form.customer_phone }}
+                {% if form.customer_phone.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.customer_phone.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <h3 class="text-lg font-bold mb-4">Delivery Address</h3>
+            
+            <div class="mb-6">
+                {{ form.delivery_address }}
+                {% if form.delivery_address.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.delivery_address.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    {{ form.delivery_city }}
+                    {% if form.delivery_city.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.delivery_city.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    {{ form.delivery_state }}
+                    {% if form.delivery_state.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.delivery_state.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    {{ form.delivery_zip }}
+                    {% if form.delivery_zip.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ form.delivery_zip.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Special Instructions (Optional)</label>
+                {{ form.delivery_notes }}
+                {% if form.delivery_notes.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.delivery_notes.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Price Summary -->
+            <div class="bg-blue-50 p-4 rounded-lg mb-6">
+                <div class="flex justify-between mb-2">
+                    <span>Monthly Rental:</span>
+                    <span class="font-semibold">${{ monthly_cost|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span>Delivery Fee:</span>
+                    <span class="font-semibold">${{ delivery_fee|floatformat:2 }}</span>
+                </div>
+                <div class="border-t border-blue-200 pt-2 mt-2">
+                    <div class="flex justify-between text-lg">
+                        <span class="font-bold">Total for This Step:</span>
+                        <span class="font-bold text-blue-600">${{ total|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-4">
+                <a href="{% url 'booking:select_dates' product.slug %}" 
+                   class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition text-center">
+                    Back
+                </a>
+                <button type="submit" 
+                        class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    Continue to Payment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

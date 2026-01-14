@@ -1,0 +1,26 @@
+Pickup Scheduled
+
+Hi {{ booking.customer_name }},
+
+Your pickup has been confirmed! Here are the details:
+
+Booking ID: {{ booking.booking_id }}
+Product: {{ booking.product.name }}
+Scheduled Pickup Date: {{ pickup.requested_pickup_date|date:"F d, Y" }}
+Pickup Location: {{ booking.delivery_address }}, {{ booking.delivery_city }}, {{ booking.delivery_state }} {{ booking.delivery_zip }}
+{% if pickup.pickup_notes %}Special Instructions: {{ pickup.pickup_notes }}{% endif %}
+
+What to Expect
+- Our team will contact you on the day of pickup to confirm arrival time
+- Please ensure the unit is accessible and clear for pickup
+- Have a representative available to meet our team
+- We'll provide a receipt once pickup is complete
+
+If you need to reschedule, please contact us as soon as possible.
+
+Best regards,
+{{ site_name }} Team
+
+---
+Contact support@rentals.com for assistance.
+&copy; 2024 {{ site_name }}. All rights reserved.

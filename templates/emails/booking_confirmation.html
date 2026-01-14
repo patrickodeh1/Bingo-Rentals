@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #0066cc; color: white; padding: 20px; text-align: center; border-radius: 4px 4px 0 0; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .booking-details { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #0066cc; }
+        .booking-details div { margin: 10px 0; }
+        .label { font-weight: bold; color: #555; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #ddd; }
+        .button { display: inline-block; padding: 10px 20px; background: #0066cc; color: white; text-decoration: none; border-radius: 4px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Booking Confirmed!</h1>
+        </div>
+        <div class="content">
+            <p>Hi {{ booking.customer_name }},</p>
+            <p>Thank you for booking with us! Your rental has been confirmed. Here are your booking details:</p>
+            
+            <div class="booking-details">
+                <div>
+                    <span class="label">Booking ID:</span> {{ booking.booking_id }}
+                </div>
+                <div>
+                    <span class="label">Product:</span> {{ booking.product.name }}
+                </div>
+                <div>
+                    <span class="label">Delivery Date:</span> {{ booking.drop_off_date|date:"F d, Y" }}
+                </div>
+                <div>
+                    <span class="label">Rental Duration:</span> {{ booking.rental_months }} month(s)
+                </div>
+                <div>
+                    <span class="label">Delivery Location:</span> {{ booking.delivery_address }}, {{ booking.delivery_city }}, {{ booking.delivery_state }} {{ booking.delivery_zip }}
+                </div>
+                <div>
+                    <span class="label">Total Amount Paid:</span> ${{ booking.total_amount }}
+                </div>
+            </div>
+            
+            <h3>What's Next?</h3>
+            <ul>
+                <li>We'll send you a reminder the day before delivery</li>
+                <li>When you're ready for pickup, visit our website or reply to this email to schedule pickup</li>
+                <li>A pickup fee will be charged when you confirm the pickup date</li>
+            </ul>
+            
+            <p>If you have any questions, please don't hesitate to contact us. We're here to help!</p>
+            
+            <p>Best regards,<br>{{ site_name }} Team</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply directly to this email. Contact support@rentals.com for assistance.</p>
+            <p>&copy; 2024 {{ site_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

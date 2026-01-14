@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h2 class="text-2xl font-bold mb-6">Pickup Payment</h2>
+        
+        <!-- Pickup Details -->
+        <div class="mb-8">
+            <h3 class="text-lg font-bold mb-4">Pickup Details</h3>
+            <div class="bg-gray-50 p-4 rounded-lg space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Booking ID:</span>
+                    <span class="font-mono font-semibold">{{ booking.booking_id }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Product:</span>
+                    <span class="font-semibold">{{ booking.product.name }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Customer:</span>
+                    <span class="font-semibold">{{ booking.customer_name }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Requested Pickup Date:</span>
+                    <span class="font-semibold">{{ pickup_data.requested_pickup_date }}</span>
+                </div>
+                {% if pickup_data.pickup_notes %}
+                <div class="flex justify-between">
+                    <span class="text-gray-700">Instructions:</span>
+                    <span class="font-semibold">{{ pickup_data.pickup_notes|truncatewords:10 }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Price -->
+        <div class="mb-8">
+            <h3 class="text-lg font-bold mb-4">Pickup Fee</h3>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <div class="flex justify-between text-lg mb-2">
+                    <span>Pickup / Removal Fee:</span>
+                    <span class="font-bold text-blue-600">${{ pickup_fee|floatformat:2 }}</span>
+                </div>
+                <p class="text-xs text-gray-600 mt-2">This fee covers the pickup service and removal of your rental item.</p>
+            </div>
+        </div>
+        
+        <!-- Payment Form -->
+        <form id="payment-form" method="post" action="{% url 'booking:process_pickup' %}">
+            {% csrf_token %}
+            <h3 class="text-lg font-bold mb-4">Payment Details</h3>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Card Information</label>
+                <div id="card-element" class="w-full px-4 py-2 border border-gray-300 rounded-lg"></div>
+                <div id="card-errors" class="text-red-500 text-sm mt-2"></div>
+            </div>
+            
+            <div class="flex gap-4">
+                <a href="{% url 'booking:schedule_pickup' %}" 
+                   class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition text-center">
+                    Back
+                </a>
+                <button type="submit" id="submit-btn"
+                        class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50">
+                    Pay ${{ pickup_fee|floatformat:2 }} & Schedule Pickup
+                </button>
+            </div>
+            
+            <p class="text-xs text-gray-600 mt-4 text-center">
+                🔒 Secure payment powered by Stripe. Your payment information is encrypted and safe.
+            </p>
+            
+            <input type="hidden" id="payment_intent_id" name="payment_intent_id">
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Initialize Stripe
+const stripe = Stripe('{{ stripe_public_key }}');
+const elements = stripe.elements();
+const cardElement = elements.create('card');
+cardElement.mount('#card-element');
+
+const clientSecret = '{{ client_secret }}';
+
+// Handle card errors
+cardElement.addEventListener('change', function(event) {
+    const displayError = document.getElementById('card-errors');
+    if (event.error) {
+        displayError.textContent = event.error.message;
+    } else {
+        displayError.textContent = '';
+    }
+});
+
+// Handle form submission
+document.getElementById('payment-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+    
+    try {
+        // Confirm payment with Stripe
+        const result = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+                card: cardElement
+            }
+        });
+        
+        if (result.error) {
+            // Show error to customer
+            document.getElementById('card-errors').textContent = result.error.message;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Pay ${{ pickup_fee|floatformat:2 }} & Schedule Pickup';
+        } else {
+            // Payment succeeded, submit form
+            document.getElementById('payment_intent_id').value = result.paymentIntent.id;
+            this.submit();
+        }
+    } catch (error) {
+        document.getElementById('card-errors').textContent = 'An error occurred. Please try again.';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Pay ${{ pickup_fee|floatformat:2 }} & Schedule Pickup';
+    }
+});
+</script>
+{% endblock %}

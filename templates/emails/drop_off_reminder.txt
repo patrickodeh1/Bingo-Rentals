@@ -1,0 +1,24 @@
+Delivery Reminder
+
+Hi {{ booking.customer_name }},
+
+This is a reminder that your {{ booking.product.name }} will be delivered TOMORROW ({{ booking.drop_off_date|date:"F d, Y" }}).
+
+Booking ID: {{ booking.booking_id }}
+Product: {{ booking.product.name }}
+Delivery Date: {{ booking.drop_off_date|date:"F d, Y" }}
+Delivery Location: {{ booking.delivery_address }}, {{ booking.delivery_city }}, {{ booking.delivery_state }} {{ booking.delivery_zip }}
+
+Please Prepare
+- Ensure someone is available to receive the delivery
+- Confirm that the delivery location is accessible
+- Clear the area where the unit will be placed
+
+If you need to reschedule or have any questions, please contact us as soon as possible.
+
+Best regards,
+{{ site_name }} Team
+
+---
+Contact support@rentals.com for assistance.
+&copy; 2024 {{ site_name }}. All rights reserved.

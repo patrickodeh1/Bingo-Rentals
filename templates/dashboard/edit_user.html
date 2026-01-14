@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Edit Staff User{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Edit Staff User</h1>
+    <form method="post" class="bg-white rounded-lg shadow p-6 max-w-lg mx-auto">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold mt-4">Save Changes</button>
+        <a href="{% url 'dashboard:manage_users' %}" class="ml-4 text-gray-600">Cancel</a>
+    </form>
+</div>
+{% endblock %}

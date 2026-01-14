@@ -1,0 +1,26 @@
+Booking Confirmed!
+
+Hi {{ booking.customer_name }},
+
+Your rental has been confirmed. Here are your booking details:
+
+Booking ID: {{ booking.booking_id }}
+Product: {{ booking.product.name }}
+Delivery Date: {{ booking.drop_off_date|date:"F d, Y" }}
+Rental Duration: {{ booking.rental_months }} month(s)
+Delivery Location: {{ booking.delivery_address }}, {{ booking.delivery_city }}, {{ booking.delivery_state }} {{ booking.delivery_zip }}
+Total Amount Paid: ${{ booking.total_amount }}
+
+What's Next?
+- We'll send you a reminder the day before delivery
+- When you're ready for pickup, visit our website to schedule pickup
+- A pickup fee will be charged when you confirm the pickup date
+
+If you have any questions, please don't hesitate to contact us. We're here to help!
+
+Best regards,
+{{ site_name }} Team
+
+---
+This is an automated message. Contact support@rentals.com for assistance.
+&copy; 2024 {{ site_name }}. All rights reserved.
