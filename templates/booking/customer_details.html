@@ -242,4 +242,37 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Persist form data to localStorage
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea');
+    
+    // Load saved data on page load
+    window.addEventListener('load', function() {
+        inputs.forEach(input => {
+            const savedValue = localStorage.getItem('booking_form_' + input.name);
+            if (savedValue) {
+                input.value = savedValue;
+            }
+        });
+    });
+    
+    // Save data on input change
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            localStorage.setItem('booking_form_' + this.name, this.value);
+        });
+        input.addEventListener('blur', function() {
+            localStorage.setItem('booking_form_' + this.name, this.value);
+        });
+    });
+    
+    // Clear saved data on successful form submission
+    form.addEventListener('submit', function() {
+        inputs.forEach(input => {
+            localStorage.removeItem('booking_form_' + input.name);
+        });
+    });
+</script>
 {% endblock %}
