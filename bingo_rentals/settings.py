@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config, Csv
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,6 +51,8 @@ INSTALLED_APPS = [
     # Third party
     'django_htmx',
     'django_celery_beat',
+    'cloudinary',
+    'cloudinary_storage',
     
     # Local apps
     'products',
@@ -100,22 +105,22 @@ WSGI_APPLICATION = 'bingo_rentals.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # SQLite (Development)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # PostgreSQL (Production) - Uncomment to use PostgreSQL
-# import dj_database_url
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=config('DATABASE_URL', default='postgresql://user:password@localhost/bingo_rentals'),
-#         conn_max_age=600,
-#         conn_health_checks=True,
-#     )
-# }
+import dj_database_url
+DATABASES = {
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default='postgresql://user:password@localhost/bingo_rentals'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+}
 
 
 # Password validation
@@ -156,9 +161,22 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# WhiteNoise Storage for production static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files - Cloudinary for production
+if config('USE_CLOUDINARY', default=False, cast=bool):
+    cloudinary.config(
+        cloud_name=config('CLOUDINARY_CLOUD_NAME', default=''),
+        api_key=config('CLOUDINARY_API_KEY', default=''),
+        api_secret=config('CLOUDINARY_API_SECRET', default=''),
+    )
+    MEDIA_URL = '/media/'
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    # Development - local storage
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
