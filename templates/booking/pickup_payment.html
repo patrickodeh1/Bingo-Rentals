@@ -37,7 +37,7 @@
         <!-- Price -->
         <div class="mb-8">
             <h3 class="text-lg font-bold mb-4">Pickup Fee</h3>
-            <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="bg-red-50 p-4 rounded-lg">
                 <div class="flex justify-between text-lg mb-2">
                     <span>Pickup / Removal Fee:</span>
                     <span class="font-bold text-blue-600">${{ pickup_fee|floatformat:2 }}</span>
@@ -63,7 +63,7 @@
                     Back
                 </a>
                 <button type="submit" id="submit-btn"
-                        class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50">
+                        class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50">
                     Pay ${{ pickup_fee|floatformat:2 }} & Schedule Pickup
                 </button>
             </div>

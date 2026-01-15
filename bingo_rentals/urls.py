@@ -8,10 +8,10 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.generic import RedirectView
+from bookings.views import landing_page
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='booking/', permanent=False)),
+    path('', landing_page, name='home'),
     path('booking/', include('bookings.urls')),
     path('dashboard/', include('dashboard.urls')),
 ]

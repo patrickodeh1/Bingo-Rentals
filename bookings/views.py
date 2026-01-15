@@ -3,6 +3,8 @@ from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from products.models import Product, PricingSetting, BlackoutDate
 from .models import Booking, PickupRequest, BookingStatus
@@ -15,6 +17,42 @@ import logging
 
 logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def staff_login(request):
+    """Staff login page for dashboard access"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            if user.is_staff:
+                login(request, user)
+                return redirect('dashboard:home')
+            else:
+                messages.error(request, 'You do not have staff access.')
+        else:
+            messages.error(request, 'Invalid username or password.')
+    return render(request, 'auth/staff_login.html')
+
+
+def staff_logout(request):
+    """Staff logout from dashboard"""
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('booking:staff_login')
+
+
+def landing_page(request):
+    """Landing page with business info and services"""
+    pricing = PricingSetting.get_settings()
+    products = Product.objects.filter(is_active=True)
+    
+    context = {
+        'pricing': pricing,
+        'products': products,
+    }
+    return render(request, 'landing.html', context)
 
 
 def booking_home(request):

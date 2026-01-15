@@ -182,6 +182,12 @@ SESSION_COOKIE_AGE = 86400  # 24 hours
 SESSION_SAVE_EVERY_REQUEST = True
 
 # ============================
+# Authentication Configuration
+# ============================
+LOGIN_URL = 'booking:staff_login'  # Redirect to staff login if not authenticated
+LOGIN_REDIRECT_URL = 'dashboard:home'  # Redirect to dashboard after login
+
+# ============================
 # Logging Configuration
 # ============================
 LOGGING = {

@@ -14,4 +14,6 @@ urlpatterns = [
     path('pickup/payment/', views.pickup_payment, name='pickup_payment'),
     path('pickup/process/', views.process_pickup, name='process_pickup'),
     path('pickup/confirmed/<uuid:booking_id>/', views.pickup_confirmed, name='pickup_confirmed'),
+    path('staff-login/', views.staff_login, name='staff_login'),
+    path('staff-logout/', views.staff_logout, name='staff_logout'),
 ]

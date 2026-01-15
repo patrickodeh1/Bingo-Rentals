@@ -6,22 +6,22 @@
     <div class="mb-12">
         <div class="flex items-center justify-between">
             <div class="flex flex-col items-center">
-                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+                <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
                 <p class="text-sm text-gray-600 mt-2">Select Product</p>
             </div>
-            <div class="flex-1 h-1 bg-blue-600 mx-2"></div>
+            <div class="flex-1 h-1 bg-red-600 mx-2"></div>
             <div class="flex flex-col items-center">
-                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+                <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
                 <p class="text-sm text-gray-600 mt-2">Choose Dates</p>
             </div>
-            <div class="flex-1 h-1 bg-blue-600 mx-2"></div>
+            <div class="flex-1 h-1 bg-red-600 mx-2"></div>
             <div class="flex flex-col items-center">
-                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+                <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">✓</div>
                 <p class="text-sm text-gray-600 mt-2">Your Info</p>
             </div>
-            <div class="flex-1 h-1 bg-blue-600 mx-2"></div>
+            <div class="flex-1 h-1 bg-red-600 mx-2"></div>
             <div class="flex flex-col items-center">
-                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">4</div>
+                <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">4</div>
                 <p class="text-sm text-gray-600 mt-2">Confirm</p>
             </div>
         </div>
@@ -60,7 +60,7 @@
         <!-- Price Breakdown -->
         <div class="mb-8">
             <h3 class="text-lg font-bold mb-4">Price Breakdown</h3>
-            <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="bg-red-50 p-4 rounded-lg">
                 <div class="flex justify-between mb-2">
                     <span>Monthly Rental ({{ booking_data.rental_months }} month<span>{% if booking_data.rental_months != 1 %}s{% endif %}</span>):</span>
                     <span class="font-semibold">${{ monthly_cost|floatformat:2 }}</span>
@@ -96,7 +96,7 @@
                     Back
                 </a>
                 <button type="submit" id="submit-btn"
-                        class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50">
+                        class="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50">
                     Pay ${{ total|floatformat:2 }}
                 </button>
             </div>
