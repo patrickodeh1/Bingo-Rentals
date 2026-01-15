@@ -105,22 +105,22 @@ WSGI_APPLICATION = 'bingo_rentals.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # SQLite (Development)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # PostgreSQL (Production) - Uncomment to use PostgreSQL
-import dj_database_url
-DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='postgresql://user:password@localhost/bingo_rentals'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+# import dj_database_url
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=config('DATABASE_URL', default='postgresql://user:password@localhost/bingo_rentals'),
+#         conn_max_age=600,
+#         conn_health_checks=True,
+#     )
+# }
 
 
 # Password validation

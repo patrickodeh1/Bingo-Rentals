@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils.text import slugify
+from cloudinary.models import CloudinaryField
 
 
 class ProductCategory(models.TextChoices):
@@ -26,7 +27,7 @@ class Product(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(0)]
     )
-    image = models.ImageField(upload_to='products/')
+    image = CloudinaryField('image', folder='bingo-rentals/products')
     stock_quantity = models.IntegerField(
         default=0,
         validators=[MinValueValidator(0)],
