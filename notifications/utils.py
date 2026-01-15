@@ -29,22 +29,24 @@ def send_email_notification(subject, to_email, template_name, context):
         return False
 
 
-def send_sms_notification(to_phone, message):
+def send_sms_notification(to_phone, message, country_code='+1'):
     """Send SMS notification via Twilio"""
     try:
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
         
-        # Format phone number
-        if not to_phone.startswith('+'):
-            to_phone = f'+1{to_phone.replace("-", "").replace("(", "").replace(")", "").replace(" ", "")}'
+        # Format phone number - remove formatting chars
+        cleaned_phone = to_phone.replace("-", "").replace("(", "").replace(")", "").replace(" ", "")
+        
+        # Combine country code + phone number
+        full_phone = f'{country_code}{cleaned_phone}'
         
         message_obj = client.messages.create(
             body=message,
             from_=settings.TWILIO_PHONE_NUMBER,
-            to=to_phone
+            to=full_phone
         )
         
-        logger.info(f'SMS sent to {to_phone}: {message_obj.sid}')
+        logger.info(f'SMS sent to {full_phone}: {message_obj.sid}')
         return True
     except Exception as e:
         logger.error(f'SMS sending failed to {to_phone}: {str(e)}')

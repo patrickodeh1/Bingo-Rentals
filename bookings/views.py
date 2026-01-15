@@ -129,6 +129,7 @@ def customer_details(request):
             request.session['booking_data'].update({
                 'customer_name': form.cleaned_data['customer_name'],
                 'customer_email': form.cleaned_data['customer_email'],
+                'country_code': form.cleaned_data['country_code'],
                 'customer_phone': form.cleaned_data['customer_phone'],
                 'delivery_address': form.cleaned_data['delivery_address'],
                 'delivery_city': form.cleaned_data['delivery_city'],
@@ -236,6 +237,7 @@ def process_payment(request):
             product=product,
             customer_name=booking_data['customer_name'],
             customer_email=booking_data['customer_email'],
+            country_code=booking_data.get('country_code', '+1'),
             customer_phone=booking_data['customer_phone'],
             delivery_address=booking_data['delivery_address'],
             delivery_city=booking_data['delivery_city'],
@@ -258,7 +260,7 @@ def process_payment(request):
         
         # Send notifications (async)
         from notifications.tasks import send_booking_confirmation
-        send_booking_confirmation(booking.id)
+        send_booking_confirmation.delay(booking.id)
         
         return JsonResponse({
             'success': True,
@@ -304,7 +306,7 @@ def schedule_pickup(request):
             # Check if pickup already scheduled
             if hasattr(booking, 'pickup_request'):
                 messages.info(request, 'Pickup already scheduled for this booking.')
-                return redirect('booking:pickup_detail', booking_id=booking_id)
+                return redirect('booking:pickup_confirmed', booking_id=booking_id)
             
             # Create pickup request (no payment needed - already paid in initial booking)
             pickup_request = PickupRequest.objects.create(
@@ -315,7 +317,7 @@ def schedule_pickup(request):
             
             # Send pickup confirmation email/SMS (async)
             from notifications.tasks import send_pickup_confirmation
-            send_pickup_confirmation(pickup_request.id)
+            send_pickup_confirmation.delay(pickup_request.id)
             
             # Clear session
             if 'pickup_data' in request.session:
@@ -411,7 +413,7 @@ def process_pickup(request):
         
         # Send notifications
         from notifications.tasks import send_pickup_confirmation
-        send_pickup_confirmation(pickup_request.id)
+        send_pickup_confirmation.delay(pickup_request.id)
         
         return JsonResponse({
             'success': True,

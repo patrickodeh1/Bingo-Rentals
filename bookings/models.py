@@ -32,6 +32,7 @@ class Booking(models.Model):
     # Customer information (guest checkout - no user account)
     customer_name = models.CharField(max_length=200)
     customer_email = models.EmailField()
+    country_code = models.CharField(max_length=5, default='+1', help_text="Phone country code")
     customer_phone = models.CharField(max_length=20)
     
     # Delivery information

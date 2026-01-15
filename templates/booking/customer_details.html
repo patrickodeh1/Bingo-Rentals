@@ -91,8 +91,27 @@
                                 <p class="text-red-600 text-sm mt-2">{{ form.customer_email.errors.0 }}</p>
                                 {% endif %}
                             </div>
+                        </div>
 
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
+                                <label for="{{ form.country_code.id_for_label }}" class="block text-sm font-bold text-gray-900 mb-2">
+                                    Country Code *
+                                </label>
+                                <select 
+                                    name="country_code" 
+                                    id="{{ form.country_code.id_for_label }}"
+                                    required
+                                    class="w-full rounded-lg border-2 border-gray-300 px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-100 transition"
+                                >
+                                    <option value="+1">+1 (Canada/United States)</option>
+                                </select>
+                                {% if form.country_code.errors %}
+                                <p class="text-red-600 text-sm mt-2">{{ form.country_code.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="md:col-span-2">
                                 <label for="{{ form.customer_phone.id_for_label }}" class="block text-sm font-bold text-gray-900 mb-2">
                                     Phone Number *
                                 </label>
@@ -144,7 +163,7 @@
                                     name="delivery_city" 
                                     id="{{ form.delivery_city.id_for_label }}"
                                     required
-                                    placeholder="New York"
+                                    placeholder="Toronto"
                                     class="w-full rounded-lg border-2 border-gray-300 px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-100 transition"
                                 >
                                 {% if form.delivery_city.errors %}
@@ -161,7 +180,7 @@
                                     name="delivery_state" 
                                     id="{{ form.delivery_state.id_for_label }}"
                                     required
-                                    placeholder="NY"
+                                    placeholder="ON"
                                     class="w-full rounded-lg border-2 border-gray-300 px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-100 transition"
                                 >
                                 {% if form.delivery_state.errors %}
@@ -178,7 +197,7 @@
                                     name="delivery_zip" 
                                     id="{{ form.delivery_zip.id_for_label }}"
                                     required
-                                    placeholder="10001"
+                                    placeholder="M5H 2N2"
                                     class="w-full rounded-lg border-2 border-gray-300 px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-100 transition"
                                 >
                                 {% if form.delivery_zip.errors %}
@@ -241,6 +260,26 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function toggleCountryCodeManual() {
+            const select = document.getElementById('country_code_select');
+            const manualDiv = document.getElementById('manual_code_div');
+            const manualInput = document.getElementById('country_code_manual');
+            
+            if (select.value === 'other') {
+                manualDiv.style.display = 'block';
+            } else {
+                manualDiv.style.display = 'none';
+                manualInput.value = '';
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleCountryCodeManual();
+        });
+    </script>
 </div>
 
 <script>

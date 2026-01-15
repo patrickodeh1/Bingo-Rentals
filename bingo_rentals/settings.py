@@ -28,11 +28,11 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 #ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
-ALLOWED_HOSTS = ['665c13afca5c.ngrok-free.app', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['soarer.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 # CSRF Configuration for ngrok tunneling
 CSRF_TRUSTED_ORIGINS = [
-    'https://665c13afca5c.ngrok-free.app',
+    'https://soarer.pythonanywhere.com',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     
     # Third party
     'django_htmx',
+    'django_celery_beat',
     
     # Local apps
     'products',
@@ -54,6 +55,14 @@ INSTALLED_APPS = [
     'dashboard',
     'notifications',
 ]
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

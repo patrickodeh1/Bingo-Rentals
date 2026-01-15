@@ -1,0 +1,39 @@
+Pickup Reminder
+
+Hi {{ booking.customer_name }},
+
+This is a reminder that your pickup is scheduled for TOMORROW ({{ pickup_date|date:"F d, Y" }}).
+
+📍 Be ready! Our team will arrive tomorrow to pick up your {{ booking.product.name }}.
+
+PICKUP DETAILS
+==============
+Booking ID: {{ booking.booking_id }}
+Product: {{ booking.product.name }}
+Pickup Date: {{ pickup_date|date:"F d, Y" }}
+Pickup Location: {{ booking.delivery_address }}, {{ booking.delivery_city }}, {{ booking.delivery_state }} {{ booking.delivery_zip }}
+
+{% if booking.pickup_request.pickup_notes %}
+Special Instructions: {{ booking.pickup_request.pickup_notes }}
+{% endif %}
+
+WHAT TO EXPECT
+==============
+- Our team will contact you tomorrow to confirm the exact arrival time
+- Please ensure the unit is accessible and clear for pickup
+- Have a representative available to meet our team
+- We'll provide a receipt once pickup is complete
+
+NEED TO RESCHEDULE?
+===================
+If you need to change the pickup date, please contact us as soon as possible so we can update our schedule.
+
+Thank you for renting with us!
+
+Best regards,
+Rental Services Team
+
+---
+This is an automated message. Please do not reply directly to this email.
+Contact support@rentals.com for assistance.
+&copy; 2024 Rental Services. All rights reserved.

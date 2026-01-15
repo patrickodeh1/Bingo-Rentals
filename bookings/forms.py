@@ -1,6 +1,11 @@
 from django import forms
 from .models import Booking
 
+# Country codes - Canada/United States only
+COUNTRY_CODES = [
+    ('+1', '+1 (Canada/United States)'),
+]
+
 
 class BookingForm(forms.Form):
     """Form for capturing customer details during checkout"""
@@ -19,11 +24,19 @@ class BookingForm(forms.Form):
             'required': True
         })
     )
+    country_code = forms.ChoiceField(
+        choices=COUNTRY_CODES,
+        initial='+1',
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        })
+    )
     customer_phone = forms.CharField(
-        max_length=20,
+        max_length=15,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': '(555) 123-4567',
+            'placeholder': '(416) 555-0123',
             'required': True
         })
     )
@@ -31,7 +44,7 @@ class BookingForm(forms.Form):
         widget=forms.Textarea(attrs={
             'class': 'form-control',
             'rows': 2,
-            'placeholder': '123 Main Street, Suite 100',
+            'placeholder': '100 King Street West, Suite 200',
             'required': True
         })
     )
@@ -39,7 +52,7 @@ class BookingForm(forms.Form):
         max_length=100,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'New York',
+            'placeholder': 'Toronto',
             'required': True
         })
     )
@@ -47,7 +60,7 @@ class BookingForm(forms.Form):
         max_length=50,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'NY',
+            'placeholder': 'ON',
             'required': True
         })
     )
@@ -55,7 +68,7 @@ class BookingForm(forms.Form):
         max_length=10,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': '10001',
+            'placeholder': 'M5H 2N2',
             'required': True
         })
     )
@@ -67,6 +80,9 @@ class BookingForm(forms.Form):
             'placeholder': 'Any special instructions or access notes'
         })
     )
+    
+    def clean(self):
+        return super().clean()
 
 
 class PickupRequestForm(forms.Form):
