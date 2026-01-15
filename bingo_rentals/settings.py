@@ -31,11 +31,11 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 #ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
-ALLOWED_HOSTS = ['soarer.pythonanywhere.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['bingo-rentals.onrender.com', 'localhost', '127.0.0.1']
 
 # CSRF Configuration for ngrok tunneling
 CSRF_TRUSTED_ORIGINS = [
-    'https://soarer.pythonanywhere.com',
+    'https://bingo-rentals.onrender.com',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
