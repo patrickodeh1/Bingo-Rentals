@@ -111,9 +111,7 @@ class Booking(models.Model):
     def calculate_total(self):
         """Calculate total booking amount"""
         monthly_cost = self.monthly_rate * self.rental_months
-        total = monthly_cost + self.delivery_fee
-        if self.pickup_date:
-            total += self.pickup_fee
+        total = monthly_cost + self.transport_fee
         return total
     
     def save(self, *args, **kwargs):

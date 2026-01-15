@@ -153,6 +153,28 @@ cardElement.addEventListener('change', function(event) {
     }
 });
 
+// Toast notification function
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+    const icon = type === 'success' ? '✓' : '✕';
+    
+    toast.innerHTML = `
+        <div class="${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-fade-in">
+            <span class="text-xl font-bold">${icon}</span>
+            <span class="font-medium">${message}</span>
+        </div>
+    `;
+    toast.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
 // Handle form submission
 document.getElementById('payment-form').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -171,19 +193,54 @@ document.getElementById('payment-form').addEventListener('submit', async functio
         
         if (result.error) {
             // Show error to customer
-            document.getElementById('card-errors').textContent = result.error.message;
+            showToast(result.error.message, 'error');
             submitBtn.disabled = false;
             submitBtn.textContent = 'Pay ${{ pickup_fee|floatformat:2 }} & Schedule Pickup';
         } else {
-            // Payment succeeded, submit form
+            // Payment succeeded, submit form via AJAX
             document.getElementById('payment_intent_id').value = result.paymentIntent.id;
-            this.submit();
+            
+            const formData = new FormData(this);
+            try {
+                const response = await fetch('{% url "booking:process_pickup" %}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Payment successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1500);
+                } else {
+                    showToast(data.error || 'Payment processing failed', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Pay ${{ pickup_fee|floatformat:2 }} & Schedule Pickup';
+                }
+            } catch (error) {
+                showToast('An error occurred. Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Pay ${{ pickup_fee|floatformat:2 }} & Schedule Pickup';
+            }
         }
     } catch (error) {
-        document.getElementById('card-errors').textContent = 'An error occurred. Please try again.';
+        showToast('An error occurred. Please try again.', 'error');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Pay ${{ pickup_fee|floatformat:2 }} & Schedule Pickup';
     }
 });
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in { animation: fadeIn 0.3s ease; }
+`;
+document.head.appendChild(style);
 </script>
 {% endblock %}

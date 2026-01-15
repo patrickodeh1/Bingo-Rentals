@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils import timezone
 from django.contrib import messages
@@ -222,6 +223,15 @@ def process_payment(request):
         product = Product.objects.get(id=booking_data['product_id'])
         pricing = PricingSetting.get_settings()
         
+        # Get charge ID from intent if available, otherwise will be populated by webhook
+        charge_id = ''
+        if intent.latest_charge:
+            try:
+                charge = stripe.Charge.retrieve(intent.latest_charge)
+                charge_id = charge.id
+            except:
+                pass
+        
         booking = Booking.objects.create(
             product=product,
             customer_name=booking_data['customer_name'],
@@ -237,7 +247,7 @@ def process_payment(request):
             monthly_rate=product.monthly_rate,
             transport_fee=pricing.transport_fee,
             stripe_payment_intent_id=payment_intent_id,
-            stripe_charge_id=intent.charges.data[0].id if intent.charges and intent.charges.data else '',
+            stripe_charge_id=charge_id,
             payment_status='paid',
             status=BookingStatus.CONFIRMED,
             confirmed_at=timezone.now()
@@ -424,3 +434,58 @@ def pickup_confirmed(request, booking_id):
     }
     return render(request, 'booking/pickup_confirmed.html', context)
 
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def stripe_webhook(request):
+    """Handle Stripe webhook events"""
+    import json
+    from django.conf import settings
+    
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+    
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        return JsonResponse({'error': 'Invalid payload'}, status=400)
+    except stripe.error.SignatureVerificationError:
+        return JsonResponse({'error': 'Invalid signature'}, status=400)
+    
+    # Handle the event
+    if event['type'] == 'charge.succeeded':
+        charge = event['data']['object']
+        
+        # Update booking with charge ID if it doesn't have one
+        try:
+            # Try to find booking by payment intent ID
+            payment_intent_id = charge.get('payment_intent')
+            if payment_intent_id:
+                booking = Booking.objects.get(stripe_payment_intent_id=payment_intent_id)
+                if not booking.stripe_charge_id:
+                    booking.stripe_charge_id = charge['id']
+                    booking.save()
+                    logger.info(f'Updated booking {booking.booking_id} with charge ID {charge["id"]}')
+        except Booking.DoesNotExist:
+            logger.warning(f'No booking found for payment intent {payment_intent_id}')
+        except Exception as e:
+            logger.error(f'Error updating booking with charge: {str(e)}')
+    
+    elif event['type'] == 'payment_intent.succeeded':
+        intent = event['data']['object']
+        logger.info(f'Payment intent succeeded: {intent["id"]}')
+    
+    elif event['type'] == 'payment_intent.payment_failed':
+        intent = event['data']['object']
+        logger.error(f'Payment intent failed: {intent["id"]}')
+        
+        try:
+            booking = Booking.objects.get(stripe_payment_intent_id=intent['id'])
+            booking.payment_status = 'failed'
+            booking.save()
+        except Booking.DoesNotExist:
+            pass
+    
+    return JsonResponse({'success': True})

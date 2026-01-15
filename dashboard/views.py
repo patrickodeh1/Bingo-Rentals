@@ -154,8 +154,12 @@ def order_detail(request, booking_id):
             messages.success(request, f'Order status updated to {booking.get_status_display()}')
             return redirect('dashboard:order_detail', booking_id=booking_id)
 
+    # Calculate monthly cost
+    monthly_cost = booking.monthly_rate * booking.rental_months
+    
     context = {
         'booking': booking,
+        'monthly_cost': monthly_cost,
         'status_choices': BookingStatus.choices,
         'page_title': f'Order {booking.booking_id}'
     }
@@ -382,7 +386,7 @@ def payment_history(request):
         orders = orders.filter(status=status_filter)
     
     # Calculate totals
-    total_revenue = sum(order.total_price for order in orders)
+    total_revenue = sum(order.total_amount for order in orders)
     active_bookings_count = orders.filter(status=BookingStatus.CONFIRMED).count()
     
     context = {

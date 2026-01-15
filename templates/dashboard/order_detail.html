@@ -73,19 +73,13 @@
                 <h2 class="text-xl font-bold text-gray-900 mb-4">Pricing</h2>
                 <div class="space-y-3 border-t border-gray-200 pt-4">
                     <div class="flex justify-between">
-                        <span class="text-gray-600">Monthly Rate ({{ booking.rental_months }}x @ ${{ booking.monthly_rate }})</span>
-                        <span class="font-medium text-gray-900">${{ booking.monthly_rate|floatformat:2|multiply:booking.rental_months }}</span>
+                        <span class="text-gray-600">Monthly Rate ({{ booking.rental_months }}x @ ${{ booking.monthly_rate|floatformat:2 }})</span>
+                        <span class="font-medium text-gray-900">${{ monthly_cost|floatformat:2 }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-600">Delivery Fee</span>
-                        <span class="font-medium text-gray-900">${{ booking.delivery_fee|floatformat:2 }}</span>
+                        <span class="text-gray-600">Transport Fee (Delivery & Removal)</span>
+                        <span class="font-medium text-gray-900">${{ booking.transport_fee|floatformat:2 }}</span>
                     </div>
-                    {% if booking.pickup_fee %}
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Pickup Fee</span>
-                        <span class="font-medium text-gray-900">${{ booking.pickup_fee|floatformat:2 }}</span>
-                    </div>
-                    {% endif %}
                     <div class="flex justify-between text-lg font-bold border-t border-gray-200 pt-4">
                         <span>Total</span>
                         <span class="text-green-600">${{ booking.total_amount|floatformat:2 }}</span>
