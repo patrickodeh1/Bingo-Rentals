@@ -46,7 +46,7 @@ def staff_logout(request):
 def landing_page(request):
     """Landing page with business info and services"""
     pricing = PricingSetting.get_settings()
-    products = Product.objects.filter(is_active=True)
+    products = Product.objects.filter(is_active=True).order_by('id')[:2]
     
     context = {
         'pricing': pricing,
@@ -118,7 +118,8 @@ def customer_details(request):
     
     # Calculate pricing
     monthly_cost = product.monthly_rate * booking_data['rental_months']
-    total = monthly_cost + pricing.delivery_fee
+    transport_fee = pricing.transport_fee
+    total = monthly_cost + transport_fee
     
     if request.method == 'POST':
         form = BookingForm(request.POST)
@@ -144,7 +145,7 @@ def customer_details(request):
         'product': product,
         'booking_data': booking_data,
         'monthly_cost': float(monthly_cost),
-        'delivery_fee': float(pricing.delivery_fee),
+        'transport_fee': float(transport_fee),
         'total': float(total),
         'page_title': 'Your Information'
     }
@@ -162,9 +163,10 @@ def order_summary(request):
     product = get_object_or_404(Product, id=booking_data['product_id'])
     pricing = PricingSetting.get_settings()
     
-    # Calculate pricing
+    # Calculate pricing - include transport fee (delivery + removal)
     monthly_cost = float(product.monthly_rate) * booking_data['rental_months']
-    total = monthly_cost + float(pricing.delivery_fee)
+    transport_fee = float(pricing.transport_fee)
+    total = monthly_cost + transport_fee
     
     # Create Stripe PaymentIntent
     try:
@@ -189,7 +191,7 @@ def order_summary(request):
         'product': product,
         'booking_data': booking_data,
         'monthly_cost': monthly_cost,
-        'delivery_fee': float(pricing.delivery_fee),
+        'transport_fee': transport_fee,
         'total': total,
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
         'client_secret': client_secret,
@@ -233,10 +235,9 @@ def process_payment(request):
             drop_off_date=booking_data['drop_off_date'],
             rental_months=booking_data['rental_months'],
             monthly_rate=product.monthly_rate,
-            delivery_fee=pricing.delivery_fee,
-            pickup_fee=pricing.pickup_fee,
+            transport_fee=pricing.transport_fee,
             stripe_payment_intent_id=payment_intent_id,
-            stripe_charge_id=intent.charges.data[0].id if intent.charges.data else '',
+            stripe_charge_id=intent.charges.data[0].id if intent.charges and intent.charges.data else '',
             payment_status='paid',
             status=BookingStatus.CONFIRMED,
             confirmed_at=timezone.now()
@@ -295,14 +296,22 @@ def schedule_pickup(request):
                 messages.info(request, 'Pickup already scheduled for this booking.')
                 return redirect('booking:pickup_detail', booking_id=booking_id)
             
-            # Store in session for payment
-            request.session['pickup_data'] = {
-                'booking_id': str(booking_id),
-                'requested_pickup_date': form.cleaned_data['requested_pickup_date'].isoformat(),
-                'pickup_notes': form.cleaned_data.get('pickup_notes', ''),
-            }
+            # Create pickup request (no payment needed - already paid in initial booking)
+            pickup_request = PickupRequest.objects.create(
+                booking=booking,
+                requested_pickup_date=form.cleaned_data['requested_pickup_date'],
+                pickup_notes=form.cleaned_data.get('pickup_notes', ''),
+            )
             
-            return redirect('booking:pickup_payment')
+            # Send pickup confirmation email/SMS (async)
+            from notifications.tasks import send_pickup_confirmation
+            send_pickup_confirmation(pickup_request.id)
+            
+            # Clear session
+            if 'pickup_data' in request.session:
+                del request.session['pickup_data']
+            
+            return redirect('booking:pickup_confirmed', booking_id=str(booking.booking_id))
     else:
         form = PickupRequestForm()
     

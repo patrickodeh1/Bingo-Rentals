@@ -8,7 +8,7 @@
     <div class="flex items-center justify-between mb-8">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Pricing Settings</h1>
-            <p class="text-gray-600 mt-1">Manage delivery and pickup fees</p>
+            <p class="text-gray-600 mt-1">Manage transport and delivery fees</p>
         </div>
         <a href="{% url 'dashboard:home' %}" class="text-red-600 hover:text-red-800">← Back to Dashboard</a>
     </div>
@@ -20,52 +20,30 @@
                 {% csrf_token %}
                 
                 <div class="bg-white rounded-lg shadow p-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Fees</h2>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Transport Fee</h2>
                     
-                    <!-- Delivery Fee -->
-                    <div class="mb-8 pb-8 border-b border-gray-200">
-                        <label for="delivery_fee" class="block text-lg font-semibold text-gray-900 mb-2">
-                            Delivery Fee
-                        </label>
-                        <p class="text-gray-600 mb-4">The charge for delivering a product to the customer's location.</p>
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl font-semibold text-gray-900">$</span>
-                            <input 
-                                type="number" 
-                                id="delivery_fee"
-                                name="delivery_fee"
-                                value="{{ pricing.delivery_fee|floatformat:2 }}"
-                                step="0.01"
-                                min="0"
-                                class="form-control rounded-lg border border-gray-300 px-4 py-3 text-2xl font-semibold"
-                                style="width: 150px;"
-                                required
-                            >
-                        </div>
-                        <p class="text-sm text-gray-500 mt-2">Current: ${{ pricing.delivery_fee|floatformat:2 }}</p>
-                    </div>
-
-                    <!-- Pickup Fee -->
+                    <!-- Transport Fee -->
                     <div class="mb-8">
-                        <label for="pickup_fee" class="block text-lg font-semibold text-gray-900 mb-2">
-                            Pickup Fee
+                        <label for="transport_fee" class="block text-lg font-semibold text-gray-900 mb-2">
+                            Transport Fee (Delivery & Removal)
                         </label>
-                        <p class="text-gray-600 mb-4">The charge for picking up a product from the customer's location.</p>
+                        <p class="text-gray-600 mb-4">The flat fee charged for both delivery to the customer's location AND future removal/pickup.</p>
                         <div class="flex items-center gap-2">
                             <span class="text-2xl font-semibold text-gray-900">$</span>
                             <input 
                                 type="number" 
-                                id="pickup_fee"
-                                name="pickup_fee"
-                                value="{{ pricing.pickup_fee|floatformat:2 }}"
+                                id="transport_fee"
+                                name="transport_fee"
+                                value="{{ pricing.transport_fee|floatformat:2 }}"
                                 step="0.01"
                                 min="0"
-                                class="form-control rounded-lg border border-gray-300 px-4 py-3 text-2xl font-semibold"
+                                class="form-control rounded-lg border-2 border-gray-300 px-4 py-3 text-2xl font-semibold focus:border-red-500 focus:ring-2 focus:ring-red-100"
                                 style="width: 150px;"
                                 required
                             >
                         </div>
-                        <p class="text-sm text-gray-500 mt-2">Current: ${{ pricing.pickup_fee|floatformat:2 }}</p>
+                        <p class="text-sm text-gray-500 mt-3">Current: ${{ pricing.transport_fee|floatformat:2 }}</p>
+                        <p class="text-sm text-blue-600 mt-2">✓ This fee is charged once at booking and covers both delivery and pickup/removal.</p>
                     </div>
 
                     <!-- Submit Button -->
@@ -81,11 +59,12 @@
     <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- How Fees Work -->
         <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-6 border border-red-200">
-            <h3 class="text-lg font-bold text-red-900 mb-3">💰 How Fees Work</h3>
+            <h3 class="text-lg font-bold text-red-900 mb-3">💰 How Transport Fee Works</h3>
             <div class="space-y-2 text-sm text-red-800">
-                <p><strong>Delivery Fee:</strong> Added to every booking automatically</p>
-                <p><strong>Pickup Fee:</strong> Added when customer schedules a pickup</p>
-                <p><strong>Example:</strong> Storage Pod at $149/month + $79 delivery + $79 pickup = customer pays full amount</p>
+                <p><strong>One Fee:</strong> Charged at booking for both delivery and removal</p>
+                <p><strong>Covers:</strong> Initial delivery + future pickup and removal</p>
+                <p><strong>Example:</strong> Storage Pod at $149/month + $80 transport = customer pays $229 total</p>
+                <p><strong>Pickup:</strong> When scheduled, customer gets email confirmation (no additional payment)</p>
             </div>
         </div>
 
@@ -113,17 +92,16 @@
                         <span class="font-semibold">$447.00</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Delivery Fee</span>
-                        <span class="font-semibold">${{ pricing.delivery_fee|floatformat:2 }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Pickup Fee (if scheduled)</span>
-                        <span class="font-semibold">${{ pricing.pickup_fee|floatformat:2 }}</span>
+                        <span>Transport Fee (Delivery & Removal)</span>
+                        <span class="font-semibold">${{ pricing.transport_fee|floatformat:2 }}</span>
                     </div>
                     <div class="flex justify-between text-base font-bold border-t border-gray-300 pt-2">
-                        <span>Total</span>
-                        <span class="text-green-600">${{ 447|add:pricing.delivery_fee|add:pricing.pickup_fee|floatformat:2 }}</span>
+                        <span>Total Customer Pays Today</span>
+                        <span class="text-green-600">${{ 447|add:pricing.transport_fee|floatformat:2 }}</span>
                     </div>
+                    <p class="text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200">
+                        ✓ Customer schedules pickup later (no additional charge, just confirmation emails)
+                    </p>
                 </div>
             </div>
         </div>

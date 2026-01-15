@@ -1,15 +1,74 @@
 {% extends 'base.html' %}
 {% block title %}Delete Staff User{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Delete Staff User</h1>
-    <div class="bg-white rounded-lg shadow p-6 max-w-lg mx-auto">
-        <form method="post">
-            {% csrf_token %}
-            <p class="mb-4">Are you sure you want to delete <strong>{{ user.username }}</strong>?</p>
-            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold">Delete</button>
-            <a href="{% url 'dashboard:manage_users' %}" class="ml-4 text-gray-600">Cancel</a>
-        </form>
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+    <div class="max-w-md w-full">
+        <!-- Alert Card -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <!-- Warning Icon -->
+            <div class="flex justify-center mb-6">
+                <div class="bg-red-100 rounded-full p-4">
+                    <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v2M6.343 17.657L5.5 18.5m5.657-1.343l.843.843m0-5.656l-.843-.843M17.657 6.343L18.5 5.5m-1.343 5.657l.843.843"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Heading -->
+            <h1 class="text-3xl font-bold text-gray-900 text-center mb-2">
+                Delete Staff User?
+            </h1>
+
+            <!-- Warning Message -->
+            <p class="text-gray-600 text-center mb-6">
+                You are about to permanently delete the staff account:
+            </p>
+
+            <!-- User Info -->
+            <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-6">
+                <p class="font-bold text-lg text-red-900">{{ user.username }}</p>
+                <p class="text-sm text-red-700 mt-1">Email: {{ user.email }}</p>
+            </div>
+
+            <!-- Warning -->
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <span class="text-2xl">⚠️</span>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            <strong>This action cannot be undone.</strong> The user will lose all dashboard access immediately.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                
+                <button 
+                    type="submit" 
+                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md"
+                >
+                    Yes, Delete User
+                </button>
+                
+                <a 
+                    href="{% url 'dashboard:manage_users' %}" 
+                    class="w-full block bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-3 px-4 rounded-lg transition text-center"
+                >
+                    Cancel
+                </a>
+            </form>
+
+            <!-- Info Text -->
+            <p class="text-xs text-gray-500 text-center mt-6">
+                For more information, contact your system administrator.
+            </p>
+        </div>
     </div>
 </div>
 {% endblock %}

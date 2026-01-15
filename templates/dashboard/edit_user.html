@@ -1,13 +1,124 @@
 {% extends 'base.html' %}
 {% block title %}Edit Staff User{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Edit Staff User</h1>
-    <form method="post" class="bg-white rounded-lg shadow p-6 max-w-lg mx-auto">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold mt-4">Save Changes</button>
-        <a href="{% url 'dashboard:manage_users' %}" class="ml-4 text-gray-600">Cancel</a>
-    </form>
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <a href="{% url 'dashboard:manage_users' %}" class="text-red-600 hover:text-red-700 text-sm font-medium mb-4 inline-flex items-center">
+                ← Back to Staff Users
+            </a>
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Edit Staff User</h1>
+            <p class="text-gray-600">Update permissions and details for <strong>{{ user.username }}</strong></p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Username Field (Read-only) -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-900 mb-2">
+                        Username
+                    </label>
+                    <input 
+                        type="text" 
+                        value="{{ user.username }}"
+                        disabled
+                        class="w-full rounded-lg border-2 border-gray-300 px-4 py-3 bg-gray-100 text-gray-600"
+                    >
+                    <p class="text-gray-500 text-xs mt-2">Username cannot be changed</p>
+                </div>
+
+                <!-- Email Field -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-bold text-gray-900 mb-2">
+                        Email Address
+                    </label>
+                    <input 
+                        type="email" 
+                        name="email" 
+                        id="{{ form.email.id_for_label }}"
+                        value="{{ user.email }}"
+                        required
+                        placeholder="user@example.com"
+                        class="w-full rounded-lg border-2 border-gray-300 px-4 py-3 focus:border-red-500 focus:ring-2 focus:ring-red-100 transition"
+                    >
+                    {% if form.email.errors %}
+                    <p class="text-red-600 text-sm mt-2">
+                        {{ form.email.errors.0 }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Permissions Section -->
+                <div class="pt-6 border-t-2 border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Staff Permissions</h3>
+                    
+                    <!-- Is Staff Checkbox -->
+                    <div class="flex items-start space-x-3 mb-4">
+                        <input 
+                            type="checkbox" 
+                            name="is_staff" 
+                            id="{{ form.is_staff.id_for_label }}"
+                            {% if user.is_staff %}checked{% endif %}
+                            class="h-5 w-5 text-red-600 rounded border-gray-300 focus:ring-red-500 mt-1 cursor-pointer"
+                        >
+                        <div class="flex-1">
+                            <label for="{{ form.is_staff.id_for_label }}" class="font-semibold text-gray-900 cursor-pointer">
+                                Dashboard Access
+                            </label>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Allow this user to access the admin dashboard and manage operations
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Is Superuser Checkbox -->
+                    <div class="flex items-start space-x-3 bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
+                        <input 
+                            type="checkbox" 
+                            name="is_superuser" 
+                            id="{{ form.is_superuser.id_for_label }}"
+                            {% if user.is_superuser %}checked{% endif %}
+                            class="h-5 w-5 text-red-600 rounded border-gray-300 focus:ring-red-500 mt-1 cursor-pointer"
+                        >
+                        <div class="flex-1">
+                            <label for="{{ form.is_superuser.id_for_label }}" class="font-semibold text-gray-900 cursor-pointer">
+                                Admin Superuser
+                            </label>
+                            <p class="text-sm text-gray-600 mt-1">
+                                ⚠️ Grant full system access including staff management. Use with caution.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Info -->
+                <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-1">
+                    <p><strong>Account Created:</strong> {{ user.date_joined|date:"M d, Y" }}</p>
+                    <p><strong>Last Login:</strong> {% if user.last_login %}{{ user.last_login|date:"M d, Y H:i" }}{% else %}Never{% endif %}</p>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex gap-4 pt-6">
+                    <button 
+                        type="submit" 
+                        class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md"
+                    >
+                        Save Changes
+                    </button>
+                    <a 
+                        href="{% url 'dashboard:manage_users' %}" 
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-3 px-4 rounded-lg transition text-center"
+                    >
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

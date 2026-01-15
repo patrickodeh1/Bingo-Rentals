@@ -46,6 +46,12 @@
                     <span class="text-gray-700">Rental Duration:</span>
                     <span class="font-semibold">{{ booking_data.rental_months }} month(s)</span>
                 </div>
+                {% if booking_data.pickup_date %}
+                <div class="flex justify-between border-t border-gray-200 pt-2">
+                    <span class="text-gray-700">Scheduled Pickup Date:</span>
+                    <span class="font-semibold text-green-600">{{ booking_data.pickup_date }}</span>
+                </div>
+                {% endif %}
                 <div class="flex justify-between">
                     <span class="text-gray-700">Delivery Address:</span>
                     <span class="font-semibold">{{ booking_data.delivery_city }}, {{ booking_data.delivery_state }}</span>
@@ -60,22 +66,37 @@
         <!-- Price Breakdown -->
         <div class="mb-8">
             <h3 class="text-lg font-bold mb-4">Price Breakdown</h3>
-            <div class="bg-red-50 p-4 rounded-lg">
-                <div class="flex justify-between mb-2">
-                    <span>Monthly Rental ({{ booking_data.rental_months }} month<span>{% if booking_data.rental_months != 1 %}s{% endif %}</span>):</span>
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div class="flex justify-between mb-3 pb-3 border-b border-red-200">
+                    <span class="text-gray-700">Monthly Rental ({{ booking_data.rental_months }} month<span>{% if booking_data.rental_months != 1 %}s{% endif %}</span>):</span>
                     <span class="font-semibold">${{ monthly_cost|floatformat:2 }}</span>
                 </div>
-                <div class="flex justify-between mb-2">
-                    <span>Delivery / Drop-off Fee:</span>
-                    <span class="font-semibold">${{ delivery_fee|floatformat:2 }}</span>
+                
+                <div class="flex justify-between mb-3 pb-3 border-b border-red-200">
+                    <span class="text-gray-700">Transport Fee (Delivery & Removal):</span>
+                    <span class="font-semibold">${{ transport_fee|floatformat:2 }}</span>
                 </div>
-                <div class="border-t border-blue-200 pt-2 mt-2">
+                
+                <div class="mt-4">
                     <div class="flex justify-between text-lg">
-                        <span class="font-bold">Total Charge:</span>
-                        <span class="font-bold text-blue-600">${{ total|floatformat:2 }}</span>
+                        <span class="font-bold">Total Due Today:</span>
+                        <span class="font-bold text-red-600">${{ total|floatformat:2 }}</span>
                     </div>
                 </div>
-                <p class="text-xs text-gray-600 mt-3">This charge covers the first month rental plus delivery fee. Pickup fees will be charged separately when you schedule pickup.</p>
+
+                <div class="mt-4 p-3 bg-white rounded border border-red-200 text-sm">
+                    <p class="text-gray-700 mb-1">
+                        <strong>✓ This charge covers:</strong>
+                    </p>
+                    <ul class="text-gray-600 ml-4 mt-2 space-y-1">
+                        <li>• First month's rental</li>
+                        <li>• Delivery to your location</li>
+                        <li>• Future pickup & removal</li>
+                    </ul>
+                    <p class="text-gray-600 mt-2">
+                        <strong>Important:</strong> Schedule pickup at the end of the rental month. Additional charges may apply for late pickup beyond the rental period.
+                    </p>
+                </div>
             </div>
         </div>
         

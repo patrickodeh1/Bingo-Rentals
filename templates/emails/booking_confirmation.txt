@@ -13,8 +13,8 @@ Total Amount Paid: ${{ booking.total_amount }}
 
 What's Next?
 - We'll send you a reminder the day before delivery
-- When you're ready for pickup, visit our website to schedule pickup
-- A pickup fee will be charged when you confirm the pickup date
+- When you're ready for pickup (at the end of your rental month), visit our website to schedule pickup
+- Confirm your pickup date and we'll send you a confirmation email — no additional payment needed
 
 If you have any questions, please don't hesitate to contact us. We're here to help!
 

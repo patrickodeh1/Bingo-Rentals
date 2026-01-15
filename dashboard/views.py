@@ -244,13 +244,30 @@ def edit_product(request, product_id):
 
 
 @staff_required
+def delete_product(request, product_id):
+    """Delete a product listing"""
+    product = get_object_or_404(Product, id=product_id)
+    
+    if request.method == 'POST':
+        product_name = product.name
+        product.delete()
+        messages.success(request, f'Product "{product_name}" has been deleted successfully!')
+        return redirect('dashboard:manage_inventory')
+    
+    context = {
+        'product': product,
+        'page_title': f'Delete {product.name}'
+    }
+    return render(request, 'dashboard/delete_product.html', context)
+
+
+@staff_required
 def pricing_settings(request):
     """Update pricing settings"""
     pricing = PricingSetting.get_settings()
 
     if request.method == 'POST':
-        pricing.delivery_fee = request.POST.get('delivery_fee')
-        pricing.pickup_fee = request.POST.get('pickup_fee')
+        pricing.transport_fee = request.POST.get('transport_fee')
         pricing.updated_by = request.user.username
         pricing.save()
 

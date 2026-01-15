@@ -108,13 +108,13 @@
                     <span class="font-semibold">${{ monthly_cost|floatformat:2 }}</span>
                 </div>
                 <div class="flex justify-between mb-2">
-                    <span>Delivery Fee:</span>
-                    <span class="font-semibold">${{ delivery_fee|floatformat:2 }}</span>
+                    <span>Transport Fee (Delivery & Removal):</span>
+                    <span class="font-semibold">${{ transport_fee|floatformat:2 }}</span>
                 </div>
                 <div class="border-t border-blue-200 pt-2 mt-2">
                     <div class="flex justify-between text-lg">
-                        <span class="font-bold">Total for This Step:</span>
-                        <span class="font-bold text-blue-600">${{ total|floatformat:2 }}</span>
+                        <span class="font-bold">Total Due Today:</span>
+                        <span class="font-bold text-red-600">${{ total|floatformat:2 }}</span>
                     </div>
                 </div>
             </div>

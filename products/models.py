@@ -45,6 +45,12 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
+            # Handle duplicate slugs
+            original_slug = self.slug
+            counter = 1
+            while Product.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
         super().save(*args, **kwargs)
     
     def get_available_quantity(self, date):
@@ -61,17 +67,27 @@ class Product(models.Model):
 
 class PricingSetting(models.Model):
     """Global pricing settings"""
+    transport_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=80.00,
+        help_text="Flat fee for delivery and removal (covers both)"
+    )
     delivery_fee = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=79.00,
-        help_text="Flat fee for delivery/drop-off"
+        blank=True,
+        null=True,
+        help_text="Legacy - use transport_fee instead"
     )
     pickup_fee = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=79.00,
-        help_text="Flat fee for pickup/removal"
+        blank=True,
+        null=True,
+        help_text="Legacy - use transport_fee instead"
     )
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.CharField(max_length=100, blank=True)
@@ -81,7 +97,7 @@ class PricingSetting(models.Model):
         verbose_name_plural = "Pricing Settings"
     
     def __str__(self):
-        return f"Delivery: ${self.delivery_fee} | Pickup: ${self.pickup_fee}"
+        return f"Transport Fee: ${self.transport_fee}"
     
     @classmethod
     def get_settings(cls):

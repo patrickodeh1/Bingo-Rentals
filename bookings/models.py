@@ -55,16 +55,11 @@ class Booking(models.Model):
         decimal_places=2,
         help_text="Rate at time of booking"
     )
-    delivery_fee = models.DecimalField(
+    transport_fee = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        help_text="Delivery fee at time of booking"
-    )
-    pickup_fee = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        help_text="Pickup fee (charged when pickup scheduled)"
+        default=80.00,
+        help_text="Transport/delivery+removal fee at time of booking"
     )
     total_amount = models.DecimalField(
         max_digits=10,
