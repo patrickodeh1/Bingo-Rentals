@@ -22,5 +22,5 @@ Best regards,
 {{ site_name }} Team
 
 ---
-Contact support@rentals.com for assistance.
+Contact bingorentals@outlook.com for assistance.
 &copy; 2024 {{ site_name }}. All rights reserved.
