@@ -31,12 +31,11 @@ DEBUG = False
 
 #ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
-ALLOWED_HOSTS = ['bingorentals-a3aszyba.b4a.run', 'bingo-rentals.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['bingo-rentals.onrender.com', 'localhost', '127.0.0.1']
 
 # CSRF Configuration for ngrok tunneling
 CSRF_TRUSTED_ORIGINS = [
     'https://bingo-rentals.onrender.com',
-    'https://bingorentals-a3aszyba.b4a.run',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]

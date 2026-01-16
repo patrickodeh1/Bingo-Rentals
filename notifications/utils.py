@@ -7,6 +7,38 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def send_notification_safe(task_func, *args, **kwargs):
+    """
+    Safely send notification via Celery with synchronous fallback.
+    If Celery/Redis not available, sends synchronously.
+    Payment is never blocked by notification failures.
+    
+    Args:
+        task_func: Celery task function
+        *args, **kwargs: Arguments for the task
+    
+    Returns:
+        bool: True if sent (async or sync), False if both failed
+    """
+    try:
+        # Try to send via Celery (async)
+        task_func.delay(*args, **kwargs)
+        logger.info(f'Task {task_func.name} queued successfully')
+        return True
+    except Exception as celery_error:
+        # Celery failed, try synchronous fallback
+        logger.warning(f'Celery task {task_func.name} failed, using synchronous fallback: {celery_error}')
+        try:
+            # Call the task function directly (synchronously)
+            task_func(*args, **kwargs)
+            logger.info(f'Notification sent synchronously (Redis/Celery unavailable)')
+            return True
+        except Exception as sync_error:
+            # Both async and sync failed, log but don't block payment
+            logger.error(f'Notification failed (both async and sync): {sync_error}')
+            return False
+
+
 def send_email_notification(subject, to_email, template_name, context):
     """Send HTML email notification using SendGrid"""
     try:

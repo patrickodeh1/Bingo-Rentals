@@ -258,9 +258,10 @@ def process_payment(request):
         # Clear session
         del request.session['booking_data']
         
-        # Send notifications (async)
+        # Send notifications (async with synchronous fallback if Redis unavailable)
         from notifications.tasks import send_booking_confirmation
-        send_booking_confirmation.delay(booking.id)
+        from notifications.utils import send_notification_safe
+        send_notification_safe(send_booking_confirmation, booking.id)
         
         return JsonResponse({
             'success': True,
@@ -411,9 +412,10 @@ def process_pickup(request):
         # Clear session
         del request.session['pickup_data']
         
-        # Send notifications
+        # Send notifications (async with synchronous fallback if Redis unavailable)
         from notifications.tasks import send_pickup_confirmation
-        send_pickup_confirmation.delay(pickup_request.id)
+        from notifications.utils import send_notification_safe
+        send_notification_safe(send_pickup_confirmation, pickup_request.id)
         
         return JsonResponse({
             'success': True,
