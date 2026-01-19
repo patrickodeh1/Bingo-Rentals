@@ -126,6 +126,17 @@ def customer_details(request):
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
+            # Get distance range from form
+            distance_range = form.cleaned_data['delivery_distance_range']
+            
+            # Convert distance range to km for fee calculation
+            if distance_range == '0-30':
+                distance_km = 15  # Representative value within 30km
+            elif distance_range == '30-100':
+                distance_km = 65  # Representative value within 30-100km
+            else:  # 100+
+                distance_km = 150  # Beyond 100km
+            
             # Store customer details in session
             request.session['booking_data'].update({
                 'customer_name': form.cleaned_data['customer_name'],
@@ -137,6 +148,8 @@ def customer_details(request):
                 'delivery_state': form.cleaned_data['delivery_state'],
                 'delivery_zip': form.cleaned_data['delivery_zip'],
                 'delivery_notes': form.cleaned_data.get('delivery_notes', ''),
+                'delivery_distance_km': distance_km,
+                'delivery_distance_range': distance_range,
             })
             
             return redirect('booking:order_summary')

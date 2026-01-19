@@ -208,6 +208,30 @@
                     </div>
                 </div>
 
+                <!-- Distance Range Selection -->
+                <div class="border-t pt-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Delivery Distance</h2>
+                    <p class="text-sm text-gray-600 mb-6">Select the distance range that matches your location. This determines your delivery fee.</p>
+                    
+                    <div class="space-y-4">
+                        {% for value, label in form.delivery_distance_range.field.choices %}
+                        <label class="flex items-center p-4 border-2 border-gray-300 rounded-lg hover:border-red-500 hover:bg-red-50 cursor-pointer transition">
+                            <input 
+                                type="radio" 
+                                name="delivery_distance_range" 
+                                value="{{ value }}"
+                                class="w-4 h-4 text-red-600"
+                                required
+                            >
+                            <span class="ml-4 text-gray-900 font-semibold">{{ label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.delivery_distance_range.errors %}
+                    <p class="text-red-600 text-sm mt-2">{{ form.delivery_distance_range.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
                 <!-- Special Instructions Section -->
                 <div class="border-t pt-8">
                     <h2 class="text-xl font-bold text-gray-900 mb-2">Special Instructions</h2>

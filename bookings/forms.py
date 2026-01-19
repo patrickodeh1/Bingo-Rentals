@@ -6,6 +6,13 @@ COUNTRY_CODES = [
     ('+1', '+1 (Canada/United States)'),
 ]
 
+# Distance range choices
+DISTANCE_RANGE_CHOICES = [
+    ('0-30', 'Within 30 km ($250)'),
+    ('30-100', '30 to 100 km ($375)'),
+    ('100+', 'Beyond 100 km (Contact for quote)'),
+]
+
 
 class BookingForm(forms.Form):
     """Form for capturing customer details during checkout"""
@@ -79,6 +86,16 @@ class BookingForm(forms.Form):
             'rows': 3,
             'placeholder': 'Any special instructions or access notes'
         })
+    )
+    
+    delivery_distance_range = forms.ChoiceField(
+        choices=DISTANCE_RANGE_CHOICES,
+        label='Delivery Distance Range',
+        widget=forms.RadioSelect(attrs={
+            'class': 'form-check-input',
+            'required': True
+        }),
+        help_text='Select the distance range that best matches your location'
     )
     
     def clean(self):
