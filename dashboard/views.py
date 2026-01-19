@@ -4,7 +4,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
 from bookings.models import Booking, BookingStatus
-from products.models import Product, PricingSetting, BlackoutDate
+from products.models import Product, PricingSetting, BlackoutDate, DistanceBasedFee
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
@@ -267,19 +267,46 @@ def delete_product(request, product_id):
 
 @staff_required
 def pricing_settings(request):
-    """Update pricing settings"""
+    """Update pricing settings and distance-based fees"""
     pricing = PricingSetting.get_settings()
+    distance_fees = DistanceBasedFee.objects.all().order_by('min_distance_km')
 
     if request.method == 'POST':
-        pricing.transport_fee = request.POST.get('transport_fee')
-        pricing.updated_by = request.user.username
-        pricing.save()
-
-        messages.success(request, 'Pricing updated successfully')
+        action = request.POST.get('action')
+        
+        if action == 'update_transport_fee':
+            pricing.transport_fee = request.POST.get('transport_fee')
+            pricing.updated_by = request.user.username
+            pricing.save()
+            messages.success(request, 'Pricing updated successfully')
+        
+        elif action == 'update_distance_fee':
+            fee_id = request.POST.get('fee_id')
+            fee = DistanceBasedFee.objects.get(id=fee_id)
+            fee.fee = request.POST.get('fee')
+            fee.description = request.POST.get('description')
+            fee.is_active = request.POST.get('is_active') == 'on'
+            fee.save()
+            messages.success(request, f'Distance fee updated: {fee.description}')
+        
+        elif action == 'add_distance_fee':
+            try:
+                DistanceBasedFee.objects.create(
+                    min_distance_km=request.POST.get('min_distance_km'),
+                    max_distance_km=request.POST.get('max_distance_km'),
+                    fee=request.POST.get('fee'),
+                    description=request.POST.get('description'),
+                    is_active=True
+                )
+                messages.success(request, 'New distance fee tier added')
+            except Exception as e:
+                messages.error(request, f'Error adding distance fee: {str(e)}')
+        
         return redirect('dashboard:pricing_settings')
 
     context = {
         'pricing': pricing,
+        'distance_fees': distance_fees,
         'page_title': 'Pricing Settings'
     }
     return render(request, 'dashboard/pricing_settings.html', context)

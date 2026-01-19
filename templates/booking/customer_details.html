@@ -231,17 +231,18 @@
                     <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 space-y-3">
                         <div class="flex justify-between">
                             <span class="text-gray-700">Monthly Rental:</span>
-                            <span class="font-semibold text-gray-900">${{ monthly_cost|floatformat:2 }}</span>
+                            <span class="font-semibold text-gray-900">${{ monthly_cost|floatformat:2 }} <span class="text-xs text-gray-600">(HST incl.)</span></span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-700">Transport Fee (Delivery & Removal):</span>
-                            <span class="font-semibold text-gray-900">${{ transport_fee|floatformat:2 }}</span>
+                            <span class="font-semibold text-gray-900">${{ transport_fee|floatformat:2 }} <span class="text-xs text-gray-600">(HST incl.)</span></span>
                         </div>
                         <div class="border-t-2 border-red-300 pt-3">
                             <div class="flex justify-between">
                                 <span class="text-lg font-bold text-gray-900">Total Due Today:</span>
                                 <span class="text-2xl font-bold text-red-600">${{ total|floatformat:2 }}</span>
                             </div>
+                            <p class="text-xs text-gray-600 mt-2">✓ All prices include HST</p>
                         </div>
                     </div>
                 </div>

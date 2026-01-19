@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from products.models import Product, PricingSetting, BlackoutDate
+from products.models import Product, PricingSetting, BlackoutDate, DistanceBasedFee
 from .models import Booking, PickupRequest, BookingStatus
 from .forms import BookingForm, PickupRequestForm
 import stripe
@@ -117,9 +117,10 @@ def customer_details(request):
     product = get_object_or_404(Product, id=booking_data['product_id'])
     pricing = PricingSetting.get_settings()
     
-    # Calculate pricing
+    # Calculate pricing - transport fee will be determined by distance in next step
     monthly_cost = product.monthly_rate * booking_data['rental_months']
-    transport_fee = pricing.transport_fee
+    # Estimate default transport fee (within 30km) until distance is provided
+    transport_fee = DistanceBasedFee.get_fee_for_distance(15)  # Default 15km estimate
     total = monthly_cost + transport_fee
     
     if request.method == 'POST':
@@ -165,9 +166,15 @@ def order_summary(request):
     product = get_object_or_404(Product, id=booking_data['product_id'])
     pricing = PricingSetting.get_settings()
     
-    # Calculate pricing - include transport fee (delivery + removal)
+    # Check if distance exceeds 100km
+    delivery_distance_km = booking_data.get('delivery_distance_km')
+    if delivery_distance_km and delivery_distance_km > 100:
+        messages.warning(request, 'For deliveries beyond 100 km, please contact us for a custom quote.')
+        return redirect('booking:customer_details')
+    
+    # Calculate pricing - transport fee based on distance from session if available
     monthly_cost = float(product.monthly_rate) * booking_data['rental_months']
-    transport_fee = float(pricing.transport_fee)
+    transport_fee = float(DistanceBasedFee.get_fee_for_distance(delivery_distance_km))
     total = monthly_cost + transport_fee
     
     # Create Stripe PaymentIntent
@@ -233,6 +240,10 @@ def process_payment(request):
             except:
                 pass
         
+        # Calculate transport fee based on delivery distance
+        delivery_distance_km = booking_data.get('delivery_distance_km')
+        calculated_transport_fee = DistanceBasedFee.get_fee_for_distance(delivery_distance_km)
+        
         booking = Booking.objects.create(
             product=product,
             customer_name=booking_data['customer_name'],
@@ -243,11 +254,12 @@ def process_payment(request):
             delivery_city=booking_data['delivery_city'],
             delivery_state=booking_data['delivery_state'],
             delivery_zip=booking_data['delivery_zip'],
+            delivery_distance_km=delivery_distance_km,
             delivery_notes=booking_data.get('delivery_notes', ''),
             drop_off_date=booking_data['drop_off_date'],
             rental_months=booking_data['rental_months'],
             monthly_rate=product.monthly_rate,
-            transport_fee=pricing.transport_fee,
+            transport_fee=calculated_transport_fee,
             stripe_payment_intent_id=payment_intent_id,
             stripe_charge_id=charge_id,
             payment_status='paid',

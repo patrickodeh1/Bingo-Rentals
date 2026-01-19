@@ -107,6 +107,59 @@ class PricingSetting(models.Model):
         return obj
 
 
+class DistanceBasedFee(models.Model):
+    """Distance-based delivery and pickup fees"""
+    min_distance_km = models.IntegerField(
+        help_text="Minimum distance in kilometers"
+    )
+    max_distance_km = models.IntegerField(
+        help_text="Maximum distance in kilometers (use 999 for unlimited/default)"
+    )
+    fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        help_text="Fee in dollars for this distance range"
+    )
+    description = models.CharField(
+        max_length=100,
+        help_text="e.g., 'Within 30 km', '30-100 km', 'Beyond 100 km'"
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['min_distance_km']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['min_distance_km', 'max_distance_km'],
+                name='unique_distance_range'
+            )
+        ]
+    
+    def __str__(self):
+        return f"{self.description}: ${self.fee}"
+    
+    @staticmethod
+    def get_fee_for_distance(distance_km):
+        """Get the fee for a given distance"""
+        if distance_km is None:
+            # Default to within 30km fee
+            fee_obj = DistanceBasedFee.objects.filter(
+                min_distance_km=0,
+                is_active=True
+            ).first()
+            return fee_obj.fee if fee_obj else 250.00
+        
+        fee_obj = DistanceBasedFee.objects.filter(
+            min_distance_km__lte=distance_km,
+            max_distance_km__gte=distance_km,
+            is_active=True
+        ).first()
+        return fee_obj.fee if fee_obj else 250.00
+
+
 class BlackoutDate(models.Model):
     """Dates when bookings are not allowed"""
     date = models.DateField(unique=True)

@@ -69,12 +69,12 @@
             <div class="bg-red-50 p-4 rounded-lg border border-red-200">
                 <div class="flex justify-between mb-3 pb-3 border-b border-red-200">
                     <span class="text-gray-700">Monthly Rental ({{ booking_data.rental_months }} month<span>{% if booking_data.rental_months != 1 %}s{% endif %}</span>):</span>
-                    <span class="font-semibold">${{ monthly_cost|floatformat:2 }}</span>
+                    <span class="font-semibold">${{ monthly_cost|floatformat:2 }} <span class="text-xs text-gray-600">(HST incl.)</span></span>
                 </div>
                 
                 <div class="flex justify-between mb-3 pb-3 border-b border-red-200">
                     <span class="text-gray-700">Transport Fee (Delivery & Removal):</span>
-                    <span class="font-semibold">${{ transport_fee|floatformat:2 }}</span>
+                    <span class="font-semibold">${{ transport_fee|floatformat:2 }} <span class="text-xs text-gray-600">(HST incl.)</span></span>
                 </div>
                 
                 <div class="mt-4">
@@ -82,6 +82,7 @@
                         <span class="font-bold">Total Due Today:</span>
                         <span class="font-bold text-red-600">${{ total|floatformat:2 }}</span>
                     </div>
+                    <p class="text-xs text-gray-600 mt-1">✓ All prices include HST</p>
                 </div>
 
                 <div class="mt-4 p-3 bg-white rounded border border-red-200 text-sm">
@@ -89,8 +90,8 @@
                         <strong>✓ This charge covers:</strong>
                     </p>
                     <ul class="text-gray-600 ml-4 mt-2 space-y-1">
-                        <li>• First month's rental</li>
-                        <li>• Delivery to your location</li>
+                        <li>• First month's rental (HST included)</li>
+                        <li>• Delivery to your location (HST included)</li>
                         <li>• Future pickup & removal</li>
                     </ul>
                     <p class="text-gray-600 mt-2">

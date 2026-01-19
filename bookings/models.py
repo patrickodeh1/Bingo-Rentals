@@ -40,6 +40,11 @@ class Booking(models.Model):
     delivery_city = models.CharField(max_length=100)
     delivery_state = models.CharField(max_length=50)
     delivery_zip = models.CharField(max_length=10)
+    delivery_distance_km = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Distance from business to delivery location in kilometers"
+    )
     delivery_notes = models.TextField(blank=True)
     
     # Booking dates
@@ -50,17 +55,17 @@ class Booking(models.Model):
         validators=[MinValueValidator(1)]
     )
     
-    # Pricing
+    # Pricing (all prices include HST)
     monthly_rate = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        help_text="Rate at time of booking"
+        help_text="Rate at time of booking (HST included)"
     )
     transport_fee = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=80.00,
-        help_text="Transport/delivery+removal fee at time of booking"
+        default=250.00,
+        help_text="Transport/delivery+removal fee at time of booking (HST included)"
     )
     total_amount = models.DecimalField(
         max_digits=10,
