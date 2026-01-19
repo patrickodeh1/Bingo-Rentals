@@ -179,35 +179,49 @@ def order_summary(request):
     product = get_object_or_404(Product, id=booking_data['product_id'])
     pricing = PricingSetting.get_settings()
     
-    # Check if distance exceeds 100km
+    # Get distance range selection
+    distance_range = booking_data.get('delivery_distance_range')
     delivery_distance_km = booking_data.get('delivery_distance_km')
-    if delivery_distance_km and delivery_distance_km > 100:
-        messages.warning(request, 'For deliveries beyond 100 km, please contact us for a custom quote.')
-        return redirect('booking:customer_details')
     
-    # Calculate pricing - transport fee based on distance from session if available
+    # Check if user selected "Beyond 100 km"
+    beyond_100km = distance_range == '100+'
+    
+    # Calculate pricing - transport fee based on distance selection
     monthly_cost = float(product.monthly_rate) * booking_data['rental_months']
     transport_fee = float(DistanceBasedFee.get_fee_for_distance(delivery_distance_km))
     total = monthly_cost + transport_fee
     
-    # Create Stripe PaymentIntent
-    try:
-        intent = stripe.PaymentIntent.create(
-            amount=int(total * 100),  # Stripe uses cents
-            currency='usd',
-            metadata={
-                'product_name': product.name,
-                'customer_email': booking_data['customer_email'],
-                'drop_off_date': booking_data['drop_off_date'],
-            }
-        )
-        
-        client_secret = intent.client_secret
-        intent_id = intent.id
-    except Exception as e:
-        logger.error(f'Stripe PaymentIntent creation error: {str(e)}')
-        messages.error(request, f'Payment setup error: {str(e)}')
-        return redirect('booking:customer_details')
+    # Get distance range label for display
+    distance_range_labels = {
+        '0-30': 'Within 30 km',
+        '30-100': '30 to 100 km',
+        '100+': 'Beyond 100 km (Contact for quote)'
+    }
+    distance_label = distance_range_labels.get(distance_range, 'Unknown')
+    
+    # For beyond 100km, skip Stripe intent creation - payment button will be disabled
+    client_secret = None
+    intent_id = None
+    
+    if not beyond_100km:
+        # Create Stripe PaymentIntent only for distances within range
+        try:
+            intent = stripe.PaymentIntent.create(
+                amount=int(total * 100),  # Stripe uses cents
+                currency='usd',
+                metadata={
+                    'product_name': product.name,
+                    'customer_email': booking_data['customer_email'],
+                    'drop_off_date': booking_data['drop_off_date'],
+                }
+            )
+            
+            client_secret = intent.client_secret
+            intent_id = intent.id
+        except Exception as e:
+            logger.error(f'Stripe PaymentIntent creation error: {str(e)}')
+            messages.error(request, f'Payment setup error: {str(e)}')
+            return redirect('booking:customer_details')
     
     context = {
         'product': product,
@@ -215,6 +229,8 @@ def order_summary(request):
         'monthly_cost': monthly_cost,
         'transport_fee': transport_fee,
         'total': total,
+        'distance_label': distance_label,
+        'beyond_100km': beyond_100km,
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
         'client_secret': client_secret,
         'intent_id': intent_id,

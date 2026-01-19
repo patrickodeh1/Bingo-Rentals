@@ -57,6 +57,10 @@
                     <span class="font-semibold">{{ booking_data.delivery_city }}, {{ booking_data.delivery_state }}</span>
                 </div>
                 <div class="flex justify-between">
+                    <span class="text-gray-700">Delivery Distance:</span>
+                    <span class="font-semibold text-blue-600">{{ distance_label }}</span>
+                </div>
+                <div class="flex justify-between">
                     <span class="text-gray-700">Contact:</span>
                     <span class="font-semibold">{{ booking_data.customer_email }}</span>
                 </div>
@@ -102,6 +106,23 @@
         </div>
         
         <!-- Payment Form -->
+        {% if beyond_100km %}
+        <!-- Beyond 100km - Contact Support Message -->
+        <div class="bg-orange-50 border-2 border-orange-300 rounded-lg p-8 text-center">
+            <h3 class="text-2xl font-bold text-orange-900 mb-4">⚠️ Delivery Beyond 100 km</h3>
+            <p class="text-gray-700 mb-6">For deliveries beyond 100 km, custom pricing is required. Please contact our team directly for a personalized quote.</p>
+            <div class="bg-white rounded-lg p-4 mb-6 border border-orange-200">
+                <p class="text-gray-900 font-semibold mb-2">📞 Contact Bingo Rentals:</p>
+                <p class="text-gray-700 mb-2">📧 Email: <a href="mailto:bingorentals@outlook.com" class="text-blue-600 hover:underline">bingorentals@outlook.com</a></p>
+                <p class="text-gray-700">Mention your delivery location and rental details for a custom quote.</p>
+            </div>
+            <a href="{% url 'booking:customer_details' %}" 
+               class="inline-block bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition">
+                ← Back to Edit
+            </a>
+        </div>
+        {% else %}
+        <!-- Normal Payment Form -->
         <form id="payment-form" method="post" action="{% url 'booking:process_payment' %}">
             {% csrf_token %}
             <h3 class="text-lg font-bold mb-4">Payment Details</h3>
@@ -129,6 +150,7 @@
             
             <input type="hidden" id="payment_intent_id" name="payment_intent_id">
         </form>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
